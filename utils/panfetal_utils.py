@@ -6,6 +6,7 @@ import numpy as np
 import scipy
 from sklearn.linear_model import Ridge
 import time
+from bbknn import bbknn
 
 sys.path.append('.')
 from genes import cc_genes

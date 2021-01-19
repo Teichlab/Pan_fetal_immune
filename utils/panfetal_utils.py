@@ -21,23 +21,30 @@ def is_cycling(adata,cc_genes=cc_genes,cut_off=0.4):
     adata.obs['Cycle_score'] = X
     adata.obs['isCycle'] = X>cut_off
     
-def pfi_preprocess(sdata, how="pd"):
+def pfi_preprocess(sdata, how="pd", inplace=False):
     '''
     General preprocessing function
-    (n.b. keeps all genes in the adata)
+    
+    how options:
+    - 'p': run pca
+    - 'd': run diffusion map
     '''
+    if inplace:
+        sdata_pp = sdata
+    else:
+        sdata_pp = sdata.copy()
     start = time.time()
-    sc.pp.highly_variable_genes(sdata, subset=True)
-    sc.pp.scale(sdata,max_value=10)
-    sdata = remove_geneset(sdata,cc_genes)
+    sc.pp.highly_variable_genes(sdata_pp, min_mean=0.001, max_mean=10, subset=True)
+    sc.pp.scale(sdata_pp,max_value=10)
+    sdata = remove_geneset(sdata_pp,cc_genes)
     if "p" in how:
-        sc.pp.pca(sdata, use_highly_variable=True)
+        sc.pp.pca(sdata_pp, use_highly_variable=True)
     if "d" in how:
-        sc.pp.neighbors(sdata)
-        sc.tl.diffmap(sdata)
+        sc.pp.neighbors(sdata_pp)
+        sc.tl.diffmap(sdata_pp)
     pp_time = time.time() - start
     print("Preprocessing runtime: ", str(pp_time))
-    return(sdata)
+    return(sdata_pp)
 
 def pfi_clustering(adata, how="pbul", batch_key = "bbk",
                    res=0.5,

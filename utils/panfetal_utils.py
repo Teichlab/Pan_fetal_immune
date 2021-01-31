@@ -36,7 +36,7 @@ def pfi_preprocess(sdata, how="pd", inplace=False):
     start = time.time()
     sc.pp.highly_variable_genes(sdata_pp, min_mean=0.001, max_mean=10, subset=True)
     sc.pp.scale(sdata_pp,max_value=10)
-    sdata = remove_geneset(sdata_pp,cc_genes)
+    sdata_pp = remove_geneset(sdata_pp,cc_genes)
     if "p" in how:
         sc.pp.pca(sdata_pp, use_highly_variable=True)
     if "d" in how:
@@ -110,3 +110,32 @@ def ridge_regression(adata,batch_key,confounder_key=[], chunksize=1e8):
 	X_remain = np.hstack(X_remain)
 	adata.layers['X_remain'] = X_remain
 	adata.layers['X_explained'] = X_explained
+    
+    
+def _propagate_labels(adata, anno_col):
+    '''
+    Propagate labels to nan cells based on KNN graph
+    '''
+    anno_nans = (adata.obs[anno_col]=="nan").values
+    nan2labelled_conns = adata.obsp["connectivities"][:,anno_nans]
+    ## Get KNN edges between nans and all cells
+    nan2labelled_conns[nan2labelled_conns.nonzero()] = 1
+    
+    ## Make dummy matrix of labels
+    lab_dummies = pd.get_dummies(adata.obs[anno_col])
+    lab_unique = lab_dummies.columns
+    lab = lab_dummies.to_numpy().T
+    
+    ## Calculate label probability based on labels of neighbours
+    class_prob =  lab @ nan2labelled_conns
+    norm = np.linalg.norm(class_prob, 2, axis=0)
+    class_prob = class_prob / norm
+    class_prob = (class_prob.T - class_prob.min(1)) / class_prob.ptp(1)
+    
+    ## Pick label with max prob
+    new_labs = lab_unique[class_prob[:,lab_unique!="nan"].argmax(1)].to_numpy()
+    max_prob = class_prob[:,lab_unique!="nan"].max(1)
+    new_labs[max_prob==0] = np.nan # exclude cells with no neighbour != nan
+
+    adata.obs[anno_col + "_propagated"] = adata.obs[anno_col]
+    adata.obs[anno_col + "_propagated"].loc[anno_nans] = new_labs

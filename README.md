@@ -4,6 +4,8 @@ Collection of scripts for analysis of pan fetal immune atlas
 ## Contents
 
 * `notebooks`: working analysis notebooks
+* `utils`: scripts with functions that are used in multiple notebooks
+* `manual_annotation`: tables of refined annotations post-integration
 * `legacy_code`: old notebooks and scripts that have been refactored in the main analyses, but worth keeping to retain useful snippets
 
 ## How to use this repo 

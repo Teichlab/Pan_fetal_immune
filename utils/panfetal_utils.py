@@ -10,6 +10,9 @@ from bbknn import bbknn
 
 sys.path.append('.')
 from genes import cc_genes
+from genes import IG_genes
+
+### Functions used for preprocessing ###
 
 def remove_geneset(adata,geneset):
     adata = adata[:,~adata.var_names.isin(list(geneset))].copy()
@@ -21,7 +24,7 @@ def is_cycling(adata,cc_genes=cc_genes,cut_off=0.4):
     adata.obs['Cycle_score'] = X
     adata.obs['isCycle'] = X>cut_off
     
-def pfi_preprocess(sdata, how="pd", inplace=False):
+def pfi_preprocess(sdata, how="pd", inplace=False, genesets2remove=[cc_genes]):
     '''
     General preprocessing function
     
@@ -36,7 +39,8 @@ def pfi_preprocess(sdata, how="pd", inplace=False):
     start = time.time()
     sc.pp.highly_variable_genes(sdata_pp, min_mean=0.001, max_mean=10, subset=True)
     sc.pp.scale(sdata_pp,max_value=10)
-    sdata_pp = remove_geneset(sdata_pp,cc_genes)
+    for s in genesets2remove:
+        sdata_pp = remove_geneset(sdata_pp,s)
     if "p" in how:
         sc.pp.pca(sdata_pp, use_highly_variable=True)
     if "d" in how:
@@ -64,7 +68,7 @@ def pfi_clustering(adata, how="pbul", batch_key = "bbk",
         umap_time = time.time()-start
         print("UMAP runtime: ", str(umap_time))
         if plot:
-            sc.pl.umap(merged_pp, color=["method", batch_key])
+            sc.pl.umap(adata, color=["method", batch_key])
     if 'l' in how:
         lab_ls = str(res).split('.')
         if len(lab_ls)==2:
@@ -139,3 +143,37 @@ def _propagate_labels(adata, anno_col):
 
     adata.obs[anno_col + "_propagated"] = adata.obs[anno_col]
     adata.obs[anno_col + "_propagated"].loc[anno_nans] = new_labs
+    
+    
+### I/O utils ###
+def _load_split_and_annotation(split, PFI_prefix = "PAN.A01.v01.entire_data_normalised_log.wGut.batchCorrected_20210118", data_dir = '/nfs/team205/ed6/data/Fetal_immune/'):
+    '''
+    Load anndata of Pan Fetal Immune split + annotation for the same split
+    '''
+    split_file = "{prefix}.{split}.batchCorrected.h5ad".format(prefix = PFI_prefix, split = split)
+    adata = sc.read_h5ad(data_dir + split_file)
+    adata_obs = pd.read_csv("/nfs/team205/ed6/data/Fetal_immune/PAN.A01.v01.entire_data_normalised_log.wGut.full_obs.annotated.csv", index_col=0)
+
+    ### Load manual annotations
+    anno_dir = '../manual_annotation/'
+    keep_anno = [split]
+
+    adata_obs["anno_lvl_1"] = np.nan
+    adata_obs["anno_lvl_2"] = np.nan
+
+    for anno in keep_anno:
+        anno_file = "{prefix}.{anno}.batchCorrected_annotation.csv".format(prefix = PFI_prefix, anno = anno)
+        if anno_file in os.listdir(anno_dir):
+            anno_df = pd.read_csv(anno_dir + anno_file, index_col=0)
+        else:
+            print("No .csv found for annotation" + anno)
+        ## Check for collisions between annotations (they should have been manually fixed)
+        if adata_obs.loc[anno_df.index,'anno_lvl_1'].isna().all():        
+            adata_obs.loc[anno_df.index,"anno_lvl_1"] = anno_df["anno_lvl_1"]
+            adata_obs.loc[anno_df.index,"anno_lvl_2"] = anno_df["anno_lvl_2"]
+        else:
+            n_cells=anno_df.index.shape[0] - adata_obs.loc[anno_df.index,'anno_lvl_1'].isna().sum()
+            print("Error! {n} cells are already annotated".format(n=n_cells))
+
+    adata.obs = pd.concat([adata.obs, adata_obs.loc[adata.obs_names][["anno_lvl_1", "anno_lvl_2"]]], 1)
+    return(adata)

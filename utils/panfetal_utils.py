@@ -146,16 +146,20 @@ def _propagate_labels(adata, anno_col):
     
     
 ### I/O utils ###
-def _load_split_and_annotation(split, PFI_prefix = "PAN.A01.v01.entire_data_normalised_log.wGut.batchCorrected_20210118", data_dir = '/nfs/team205/ed6/data/Fetal_immune/'):
+
+def _load_split_and_annotation(split, full_mat=False, PFI_prefix = "PAN.A01.v01.entire_data_normalised_log.wGut.batchCorrected_20210118", data_dir = '/nfs/team205/ed6/data/Fetal_immune/'):
     '''
     Load anndata of Pan Fetal Immune split + annotation for the same split
     '''
-    split_file = "{prefix}.{split}.batchCorrected.h5ad".format(prefix = PFI_prefix, split = split)
+    if not full_mat:
+        split_file = "{prefix}.{split}.batchCorrected.h5ad".format(prefix = PFI_prefix, split = split)
+    else:
+        split_file = "{prefix}.{split}.h5ad".format(prefix = PFI_prefix, split = split)
     adata = sc.read_h5ad(data_dir + split_file)
     adata_obs = pd.read_csv("/nfs/team205/ed6/data/Fetal_immune/PAN.A01.v01.entire_data_normalised_log.wGut.full_obs.annotated.csv", index_col=0)
 
     ### Load manual annotations
-    anno_dir = '../manual_annotation/'
+    anno_dir = '/nfs/team205/ed6/bin/Pan_fetal_immune/manual_annotation/'
     keep_anno = [split]
 
     adata_obs["anno_lvl_1"] = np.nan

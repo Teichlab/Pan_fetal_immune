@@ -9,12 +9,10 @@ Collection of scripts for analysis of pan fetal immune atlas
 * `legacy_code`: old notebooks and scripts that have been refactored in the main analyses, but worth keeping to retain useful snippets
 
  -->
-* `src` contains source code used to analyze the data
-* `metadata`: contains metadata relevant to annotate the samples and pointers to raw and processed data
+* [`src`](https://github.com/emdann/Pan_fetal_immune/edit/master/src) contains source code used to analyze the data
+* [`metadata`](https://github.com/emdann/Pan_fetal_immune/edit/master/metadata): contains metadata relevant to annotate the samples and pointers to raw and processed data
 * `legacy_code`: old notebooks and scripts that have been refactored in the main analyses, but worth keeping to retain useful snippets
 * `thrash_n_snippets`: discarded code not included in main analysis
-
-
 
 ## How to contribute to this repo
 

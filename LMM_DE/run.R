@@ -47,7 +47,7 @@ save(res,file=paste0(output_data_dir,"res.Rbin"))
 cmd <- paste0("mkdir ", output_data_dir, "DE")
 system(cmd)
 ucelltypes=unique(matrix(unlist(strsplit(colnames(res$Z)[res$H[,names(res$nh)=="celltype_organ"]==1],":")),2)[1,])
-write.table(data.frame(ucelltypes), file=paste0(output_data_dir, "celltype.txt"), col.names = FALSE)
+write.table(data.frame(ucelltypes), file=paste0(output_data_dir, "DE/celltype.txt"), col.names = FALSE)
 
 # DE for marginal effects
 de_celltype=getBF(Y,res,"celltype",DE1=1,AllClus=F)

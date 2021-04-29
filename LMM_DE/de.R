@@ -1,8 +1,8 @@
 library(Matrix)
 
 bin_dir = "/nfs/team205/ed6/bin/Pan_fetal_immune/LMM_DE/"
-input_data_dir = "/nfs/team205/ed6/data/Fetal_immune/LMM_data/LMM_input_MYELOID_PBULK/"
-output_data_dir = "/nfs/team205/ed6/data/Fetal_immune/LMM_data/LMM_output_MYELOID_PBULK/"
+input_data_dir = "/nfs/team205/ed6/data/Fetal_immune/LMM_data/LMM_input_MYELOID/"
+output_data_dir = "/nfs/team205/ed6/data/Fetal_immune/LMM_data/LMM_output_MYELOID/"
 
 source(paste0(bin_dir, "LMM.R"))
 

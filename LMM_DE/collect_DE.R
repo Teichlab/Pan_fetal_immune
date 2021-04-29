@@ -1,6 +1,6 @@
 library(Matrix)
 
-id = 'MYELOID_PBULK'
+id = 'MYELOID'
 input_data_dir = paste0("/nfs/team205/ed6/data/Fetal_immune/LMM_data/LMM_input_", id, "/")
 output_data_dir = paste0("/nfs/team205/ed6/data/Fetal_immune/LMM_data/LMM_output_", id, "/")
 
@@ -13,7 +13,8 @@ uorgan=names(table(mdata$organ))
 # beta = ltsr = delta = gname = nct = NULL
 th = 0.9
 res_df = data.frame()
-for(celltype in celltype_table[,1]){
+# for(celltype in celltype_table[,1]){
+for(celltype in 1:27){
 	# DE result
 	de=readRDS(paste(output_data_dir, "DE/de_",celltype,".RDS",sep=""))
     # Exclude if celltype is present just in one organ

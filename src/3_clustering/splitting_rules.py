@@ -37,7 +37,7 @@ splitting_labels = {
  'DP T CELL',
  'DN T CELL',
  'LTI/ILC3'] ,
-    'B':['B CELL', 'PRE B CELL', 'PRE PRO B CELL','ELP'],
+    'B':['B CELL', 'PRE B CELL', 'PRE PRO B CELL','ELP', "PRO B CELL"],
     'MYELOID':['KUPFFER CELL',
  'MONOCYTE/MACROPHAGE',
  'DC',

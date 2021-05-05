@@ -18,7 +18,7 @@ for filename in os.listdir(indir):
     if not os.path.exists(sample_outdir):
         os.mkdir(sample_outdir)
     adata = sc.read_h5ad(indir + filename)
-    barcodes = [x.split(sample + "-")[1] + "-1" for x in adata.obs_names]
+    barcodes = [x.split(sample + "-")[1] for x in adata.obs_names]
     f = open( sample_outdir + 'updated_barcodes.tsv','w')
     f.writelines([line+'\n' for line in barcodes])
     f.close()

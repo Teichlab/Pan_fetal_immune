@@ -8,5 +8,8 @@ Reads `.h5` output from cellbender and runs cell and gene filtering
 #### Step 2: Merge in one anndata `PFI_pp_2_merge_cellbender.py`
 Merges filtered matrices for each sample in one anndata, removes doublets, saves anndatas of raw counts and log-normalized counts matrices
 
-#### Step 3: Make obs table `PFI_3_make_obs.py`
+#### Step 3: Collapse annotations from published data `20201230_UniformCellLabels.ipynb`
+Merges metadata and uniformed annotations into one table that becomes the `adata.obs`
+
+#### Step 4: Make obs table `PFI_3_make_obs.py`
 Merges metadata and uniformed annotations into one table that becomes the `adata.obs`

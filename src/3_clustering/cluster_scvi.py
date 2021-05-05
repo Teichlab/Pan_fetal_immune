@@ -48,3 +48,6 @@ adata = sc.read_h5ad(h5ad_file)
 
 ## Run
 embed_and_cluster_scvi(adata, emb_file)
+
+## Overwrite complete adata
+adata.write_h5ad(h5ad_file)

@@ -30,7 +30,7 @@ Split IDs:
 - `MYELOID` (myeloid + progenitors)
 - `LYMPHOID` (lymphoid + progenitors)
 
-Working anndata (log-norm expression + scVI embeddings + old annotations): `/nfs/team205/ed6/data/Fetal_immune/PAN.A01.v01.entire_data_normalised_log.{timestamp}.{splitID}.h5ad` 
+Working anndata (log-norm expression + scVI embeddings + old annotations): `/nfs/team205/ed6/data/Fetal_immune/PAN.A01.v01.entire_data_normalised_log.{timestamp}.{splitID}.embedding.h5ad` 
  
 AnnData components:
 - raw counts (doublets excluded): `/nfs/team205/ed6/data/Fetal_immune/PAN.A01.v01.entire_data_raw_count.{timestamp}.{splitID}.h5ad` 

@@ -2,4 +2,5 @@ This directory stores structured metadata about the observations collected for t
 
 ## Contents
 * `manual_annotation/`: tables of refined annotations post-integration
+* 'souporcell_results/': output from souporcell - barcodes from potential maternal contamination 
 * `DATA_INFO.md`: information on where to find the data

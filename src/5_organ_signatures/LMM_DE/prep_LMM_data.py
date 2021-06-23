@@ -4,6 +4,25 @@ import scanpy as sc
 import pandas as pd
 import numpy as np
 import scipy.io
+import gzip
+import shutil
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("timestamp", help="data timestamp")
+parser.add_argument("--indir", 
+                    default="/nfs/team205/ed6/data/Fetal_immune/",
+                    help="folder containing anndata obj")
+parser.add_argument("--split_name", 
+                    default="",
+                    help="ID for data split (e.g. NKT, Progenitors, Stroma...) (default: no split, full atlas)")
+args = parser.parse_args()
+
+def zip_file(indir, filename):
+    with open(os.path.join(indir,filename),'rb') as f_in:
+        with gzip.open(os.path.join(indir,filename) + '.gz','wb') as f_gz:
+            shutil.copyfileobj(f_in, f_gz)
+    os.remove(os.path.join(indir,filename)) 
 
 def save_4_lmm(adata, adata_id, covs=["Sample", "donor", "organ", "anno_lvl_2", "age", "method"]):
     input_data_dir = "/nfs/team205/ed6/data/Fetal_immune/LMM_data/LMM_input_{id}/".format(id=adata_id)
@@ -11,11 +30,15 @@ def save_4_lmm(adata, adata_id, covs=["Sample", "donor", "organ", "anno_lvl_2", 
         os.mkdir(input_data_dir)
     # Save log-counts matrix
     scipy.io.mmwrite(input_data_dir + "matrix.mtx", adata.X)
+    zip_file(input_data_dir, 'matrix.mtx')
     # Save gene names
     adata.var.to_csv(input_data_dir + 'gene.csv')
+    zip_file(input_data_dir, 'gene.csv')
     # Save metadata
     lmm_metadata = adata.obs[covs]
     lmm_metadata.to_csv(input_data_dir + 'metadata.csv')
+    zip_file(input_data_dir, 'metadata.csv')
+
     
 def anndata2pseudobulk(adata, group_by, agg="s", min_ncells = 10):
     '''
@@ -68,43 +91,38 @@ def anndata2pseudobulk(adata, group_by, agg="s", min_ncells = 10):
 
 
 ### Load full data ###
+timestamp = args.timestamp
+data_dir = args.indir
+spl = args.split_name
+if len(spl)==0:
+    h5ad_file = data_dir + 'PAN.A01.v01.entire_data_normalised_log.{t}.h5ad'.format(t=timestamp)
+else:
+    h5ad_file = data_dir + 'PAN.A01.v01.entire_data_normalised_log.{t}.{s}.embedding.h5ad'.format(t=timestamp, s=spl)
 
-merged_raw = sc.read_h5ad('/nfs/team205/ed6/data/Fetal_immune/PAN.A01.v01.entire_data_normalised_log.wGut.h5ad')
-# Fix obs names of gut cells
-def _rename_gut_cells(x):
-    if "FCA" not in x:
-        x = x.split("_")[8].split('-')[1] + "-1"  + "_" + "_".join(x.split("_")[3:6])
-    else: 
-        x = x.split("_")[7].split('-')[1] + "-1" + "_" + "_".join(x.split("_")[3:5]) 
-    return(x)
-
-obs_names = merged_raw.obs_names.values
-gut_ixs = np.where(merged_raw.obs.organ=="GU")[0]
-for i in gut_ixs:
-    obs_names[i] = _rename_gut_cells(obs_names[i])
-
-merged_raw.obs_names = obs_names
+## Read adata
+print("Loading data...")
+adata = sc.read_h5ad(h5ad_file)
 
 # Add annotation obs
-adata_obs = pd.read_csv('/nfs/team205/ed6/data/Fetal_immune/PAN.A01.v01.entire_data_normalised_log.wGut.batchCorrected_20210118.full_obs.annotated.csv', index_col=0)
-merged_raw = merged_raw[adata_obs.index]
-merged_raw.obs = adata_obs
+anno_dir = "/nfs/team205/ed6/bin/Pan_fetal_immune/metadata/manual_annotation/"
+anno_df = pd.read_csv(anno_dir + 'PAN.A01.v01.entire_data_normalised_log.{t}.{s}.csv'.format(t=timestamp, s=spl), index_col=0)
+adata.obs = pd.concat([adata.obs, anno_df],1).loc[adata.obs_names]
 
 # Rename funky organ
-merged_raw.obs.loc[merged_raw.obs.organ=="TH(pharyn)","organ"] = "TH"
+adata.obs.loc[adata.obs.organ=="TH(pharyn)","organ"] = "TH"
 
 ### Subset to cells of interest ###
-
-adata = merged_raw[~merged_raw.obs["anno_lvl_2_MYELOID"].isna()]
-adata.obs["anno_lvl_2"] = adata.obs["anno_lvl_2_MYELOID"]
+# adata = merged_raw[~merged_raw.obs["anno_lvl_2_MYELOID"].isna()]
+# adata.obs["anno_lvl_2"] = adata.obs["anno_lvl_2_MYELOID"]
 
 ### Pseudobulking ###
 pseudobulk=True
-adata_id="MYELOID"
 if pseudobulk:
     adata = anndata2pseudobulk(adata, ["Sample", "donor", "organ", "anno_lvl_2", "age", "method"], agg="m")
-    adata_id = adata_id + "_PBULK"
+    adata_id = spl + "_PBULK"
+else:
+    adata_id = spl
 
 ### Save data
-save_4_lmm(adata, adata_id, covs=["Sample", "donor", "organ", "anno_lvl_2", "age", "method"])
+save_4_lmm(adata, adata_id, covs=["Sample", "donor", "organ", "anno_lvl_2", "age", "method", "n_cells"])
 

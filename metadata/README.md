@@ -4,3 +4,5 @@ This directory stores structured metadata about the observations collected for t
 * `manual_annotation/`: tables of refined annotations post-integration
 * `souporcell_results/`: output from souporcell - barcodes from potential maternal contamination 
 * `DATA_INFO.md`: information on where to find the data
+* `cc_genes.csv`: list of cell cycle genes used for feature selection
+* `organ_colors.csv`: color palette for organs

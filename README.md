@@ -20,7 +20,7 @@ To avoid conflicts, each contributor should make a working branch for themselves
 
 In your terminal, first clone the repo:
 ```
-git clone emdann/Pan_fetal_immune
+git clone https://github.com/emdann/Pan_fetal_immune.git
 ```
 Then create your personal working branch
 ```

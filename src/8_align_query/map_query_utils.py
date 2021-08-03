@@ -91,7 +91,7 @@ def _map_query_to_panfetal(
     return(query_adata_filled, vae_q)
 
 ## I/O utils ##
-def _merge_query_and_reference(
+def merge_query_and_reference(
     query_h5ad_file,
     split,
     ref_data_dir = '/home/jupyter/mount/gdrive/Pan_fetal/data4gpu_node/',
@@ -114,7 +114,7 @@ def _merge_query_and_reference(
     ref_adata.obsm["X_scvi"] = ref_embedding
     ref_adata.var_names = ref_adata.var.GeneID
 
-    concat_adata = ref_adata.concatenate(query_adata_mapped, batch_key="dataset", batch_categories=["reference", "query"])
+    concat_adata = ref_adata.concatenate(query_adata_mapped, batch_key="dataset", batch_categories=["reference", "query"], join="outer")
     sc.pp.neighbors(concat_adata, use_rep="X_scvi", n_neighbors = 30)
     return(concat_adata)
 

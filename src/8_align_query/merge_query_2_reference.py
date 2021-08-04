@@ -78,7 +78,6 @@ merged_adata = _merge_query_and_reference(query_h5ad_file, split, ref_data_dir=r
 query_adata_full = sc.read_h5ad(query_h5ad_file.split(".mapped2")[0] + ".h5ad") ## To add genes that are not used in scVI
 merged_adata = _add_all_query_genes(merged_adata, query_adata_full)
 
-
 ## Compute UMAP
 print("Running KNN search...\n")
 sc.pp.neighbors(merged_adata, n_neighbors=30, use_rep="X_scvi")

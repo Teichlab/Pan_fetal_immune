@@ -28,8 +28,32 @@ def _merge_query_and_reference(
     ref_adata.obsm["X_scvi"] = ref_embedding
     ref_adata.var_names = ref_adata.var.GeneID
 
-    concat_adata = ref_adata.concatenate(query_adata_mapped, batch_key="dataset", batch_categories=["reference", "query"])
+    concat_adata = anndata.concat([ref_adata, query_adata_mapped], 
+                                  label="dataset", keys=["reference", "query"],
+                                  axis=1, join="outer", merge="unique", uns_merge="unique")
+    concat_adata.obs_names = concat_adata.obs_names + "-" + concat_adata.obs["dataset"].astype("str")
     return(concat_adata)
+
+def _add_all_query_genes(merged_adata, query_adata_full):
+    if not any(merged_adata.var_names.isin(query_adata_full.var_names)):
+        raise ValueError("var_names don't match between query and merged AnnData")
+
+    if not any(query_adata_full.obs_names.str.endswith("-query")):
+        query_adata_full.obs_names = query_adata_full.obs_names + "-query"
+
+    ## Do the merge
+    full_merged_adata = anndata.concat([merged_adata, query_adata_full[0:142]], axis=1, join="outer", merge="unique", uns_merge="unique")
+
+    ## Check that the number of obs is right
+    if not full_merged_adata.n_obs == merged_adata.n_obs:
+        raise AssertionError("The number of obs doesn't match, something is wrong in your join")
+
+    ## Check that you have more expression vals than before
+    one_query_cell = query_adata_full.obs_names[10]
+    if not len(full_merged_adata[one_query_cell].X.nonzero()[0]) > len(merged_adata[one_query_cell].X.nonzero()[0]):
+        raise AssertionError("You have less or the same expression values for query cells than before. Are you sure that query_adata_full is the dataset before feature selection?")
+
+    return(full_merged_adata)
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -51,6 +75,9 @@ timestamp = args.timestamp
 ## Merge datasets
 print("Merging reference and query...\n")
 merged_adata = _merge_query_and_reference(query_h5ad_file, split, ref_data_dir=ref_data_dir)
+query_adata_full = sc.read_h5ad(query_h5ad_file.split(".mapped2")[0] + ".h5ad") ## To add genes that are not used in scVI
+merged_adata = _add_all_query_genes(merged_adata, query_adata_full)
+
 
 ## Compute UMAP
 print("Running KNN search...\n")

@@ -54,4 +54,4 @@ adata_obs['is_annotated'] = adata_obs[anno_cols].notna().any(axis=1).astype("int
 adata_obs['is_uniquely_annotated'] = (adata_obs[anno_cols].notna().sum(axis=1)==2).astype("int")
 
 ## Save 
-adata_obs.to_csv(data_dir + "PAN.A01.v01.entire_data_normalised_log.{t}.full_obs.annotated.csv".format(t=timestamp), index_col=0)
+adata_obs.to_csv(data_dir + "PAN.A01.v01.entire_data_normalised_log.{t}.full_obs.annotated.csv".format(t=timestamp))

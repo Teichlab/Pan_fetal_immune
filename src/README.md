@@ -9,6 +9,7 @@ Each subfolders contains scripts and notebooks used for a step in the analysis. 
 * `4_annotation`: scripts for cell type annotation based on marker gene expression
 * `5_organ_signatures`: scripts for analysis of organ-specific cell type signatures (with LMM and factor analysis)
 * `6_trajectory_inference`: scripts for trajectory inference on immune cells
-* `7_differential_abundance`
+* `7_differential_abundance`: scripts for differential abundance analysis in time with Milo
+* `8_align_query`: scripts to map new data to panfetal references with scArches implementation in `scvi-tools`
 * `_misc` miscellaneous analyses and scripts
 * `utils` contains utility functions used in many analyses

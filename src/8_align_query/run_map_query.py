@@ -38,11 +38,18 @@ batch_name = args.batch_name
 scvi_outs_dir = args.indir
 model_dir = args.model_dir
 
+def _verify_counts(adata):
+    return(all([not (i%1) for i in adata.X[0,:].toarray()[0]]))
+
 query_adata = sc.read_h5ad(h5ad_file)
 
 ## Check that varnames are gene ids
 if not query_adata.var_names.str.startswith("ENS").all():
     raise ValueError('`query_adata.var_names` are not Ensembl geneIDs. Please convert')
+    
+## Check that adata.X contains counts
+if not _verify_counts(query_adata):
+    raise ValueError('`query_adata.X` does not contain raw counts')
     
 query_adata_mapped, _ = map_query_utils._map_query_to_panfetal(query_adata, split=split,  
                                             scvi_outs_dir = scvi_outs_dir,

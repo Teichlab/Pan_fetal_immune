@@ -1,7 +1,5 @@
 ## WHERE IS THE DATA
 
-<!-- Data folder: `/nfs/team205/ed6/data/Fetal_immune/` -->
-
 ### Raw data matrices
 - STARSOLO Mapping and cellbender outputs: `/lustre/scratch117/cellgen/team205/sharedData/ly5/cellbender/`
 - Filtered `.h5ad` for each sample: `/nfs/team205/ed6/data/Fetal_immune/cellbender_raw/`
@@ -19,6 +17,7 @@ Current data timestamp: `20210429`
 - var table (gene dispersion estimates for feature selection) `/nfs/team205/ed6/data/Fetal_immune/PAN.A01.v01.entire_data_normalised_log.{timestamp}.var.csv`
 - scVI latent embedding `/nfs/team205/ed6/data/Fetal_immune/scVI_outs/PAN.A01.v01.entire_data_raw_count.{t}.scVI_out.npy` 
 - scVI model (to add new query datasets) `~/mount/gdrive/Pan_fetal/data4gpu_node/...`
+- Full obs table (collecting metadata and pre-existing annotations) **with manual annotations** `/nfs/team205/ed6/data/Fetal_immune/PAN.A01.v01.entire_data_normalised_log.{timestamp}.full_obs.annotated.clean.csv`
 
 #### Lineage subsets
 

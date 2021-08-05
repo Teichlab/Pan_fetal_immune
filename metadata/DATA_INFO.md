@@ -36,4 +36,9 @@ AnnData components:
 - var table (gene dispersion estimates for feature selection) `/nfs/team205/ed6/data/Fetal_immune/PAN.A01.v01.entire_data_normalised_log.{timestamp}.{splitID}.var.csv`
 - scVI latent embedding `/nfs/team205/ed6/data/Fetal_immune/scVI_outs/PAN.A01.v01.entire_data_raw_count.{t}.{s}.scVI_out.npy`  
 - scVI model (to add new query datasets) `~/mount/gdrive/Pan_fetal/data4gpu_node/scvi_{splitID}_model`
+
+### Spatial data
+
+- raw data: `/lustre/scratch117/cellgen/team205/sharedData/ed6/visium-noimage-hack` (mapped without image with a hack by `ktpolanski`)
+- pre-processed anndata objects: `/nfs/team205/ed6/data/Fetal_immune/Visium/*.h5ad` 
  

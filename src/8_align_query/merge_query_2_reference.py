@@ -1,5 +1,5 @@
-### Merging reference and query and computing embedding with RAPIDS ###
-## to run on GPU node
+### Merging reference and query and computing embedding ###
+
 import os,sys
 import numpy as np
 import scanpy as sc
@@ -21,16 +21,19 @@ def _merge_query_and_reference(
     - timestamp: dataset timestamp
     '''
     query_adata_mapped = sc.read_h5ad(query_h5ad_file)
-
+    query_adata_full = sc.read_h5ad(query_h5ad_file.split(".mapped2")[0] + ".h5ad") ## To add genes that are not used in scVI
+    query_adata_full.obsm["X_scvi"] = query_adata_mapped.obsm["X_scvi"].copy()
+    query_adata_full.uns["_scvi"] = query_adata_mapped.uns["_scvi"].copy()
+    
     ## Read reference
     ref_adata = sc.read_h5ad(ref_data_dir + 'PAN.A01.v01.entire_data_raw_count.{t}.{s}.h5ad'.format(t=timestamp, s=split))
     ref_embedding = np.load(ref_data_dir + 'PAN.A01.v01.entire_data_raw_count.{t}.{s}.scVI_out.npy'.format(t=timestamp, s=split))
     ref_adata.obsm["X_scvi"] = ref_embedding
     ref_adata.var_names = ref_adata.var.GeneID
 
-    concat_adata = anndata.concat([ref_adata, query_adata_mapped], 
+    concat_adata = anndata.concat([ref_adata, query_adata_full], axis=0,
                                   label="dataset", keys=["reference", "query"],
-                                  axis=1, join="outer", merge="unique", uns_merge="unique")
+                                  join="outer", merge="unique", uns_merge="unique")
     concat_adata.obs_names = concat_adata.obs_names + "-" + concat_adata.obs["dataset"].astype("str")
     return(concat_adata)
 
@@ -42,7 +45,7 @@ def _add_all_query_genes(merged_adata, query_adata_full):
         query_adata_full.obs_names = query_adata_full.obs_names + "-query"
 
     ## Do the merge
-    full_merged_adata = anndata.concat([merged_adata, query_adata_full[0:142]], axis=1, join="outer", merge="unique", uns_merge="unique")
+    full_merged_adata = anndata.concat([merged_adata, query_adata_full], axis=1, join="outer", merge="unique", uns_merge="unique")
 
     ## Check that the number of obs is right
     if not full_merged_adata.n_obs == merged_adata.n_obs:
@@ -76,7 +79,7 @@ timestamp = args.timestamp
 print("Merging reference and query...\n")
 merged_adata = _merge_query_and_reference(query_h5ad_file, split, ref_data_dir=ref_data_dir)
 query_adata_full = sc.read_h5ad(query_h5ad_file.split(".mapped2")[0] + ".h5ad") ## To add genes that are not used in scVI
-merged_adata = _add_all_query_genes(merged_adata, query_adata_full)
+# merged_adata = _add_all_query_genes(merged_adata, query_adata_full)
 
 ## Compute UMAP
 print("Running KNN search...\n")

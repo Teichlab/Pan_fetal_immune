@@ -107,39 +107,43 @@ def _merge_query_and_reference(
     - timestamp: dataset timestamp
     '''
     query_adata_mapped = sc.read_h5ad(query_h5ad_file)
-
+    query_adata_full = sc.read_h5ad(query_h5ad_file.split(".mapped2")[0] + ".h5ad") ## To add genes that are not used in scVI
+    query_adata_full.obsm["X_scvi"] = query_adata_mapped.obsm["X_scvi"].copy()
+    query_adata_full.uns["_scvi"] = query_adata_mapped.uns["_scvi"].copy()
+    
     ## Read reference
     ref_adata = sc.read_h5ad(ref_data_dir + 'PAN.A01.v01.entire_data_raw_count.{t}.{s}.h5ad'.format(t=timestamp, s=split))
     ref_embedding = np.load(ref_data_dir + 'PAN.A01.v01.entire_data_raw_count.{t}.{s}.scVI_out.npy'.format(t=timestamp, s=split))
     ref_adata.obsm["X_scvi"] = ref_embedding
     ref_adata.var_names = ref_adata.var.GeneID
 
-    concat_adata = anndata.concat([ref_adata, query_adata_mapped], 
+    concat_adata = anndata.concat([ref_adata, query_adata_full], axis=0,
                                   label="dataset", keys=["reference", "query"],
-                                  axis=1, join="outer", merge="unique", uns_merge="unique")
+                                  join="outer", merge="unique", uns_merge="unique")
     concat_adata.obs_names = concat_adata.obs_names + "-" + concat_adata.obs["dataset"].astype("str")
     return(concat_adata)
 
-def _add_all_query_genes(merged_adata, query_adata_full):
-    if not any(merged_adata.var_names.isin(query_adata_full.var_names)):
-        raise ValueError("var_names don't match between query and merged AnnData")
 
-    if not any(query_adata_full.obs_names.str.endswith("-query")):
-        query_adata_full.obs_names = query_adata_full.obs_names + "-query"
+# def _add_all_query_genes(merged_adata, query_adata_full):
+#     if not any(merged_adata.var_names.isin(query_adata_full.var_names)):
+#         raise ValueError("var_names don't match between query and merged AnnData")
 
-    ## Do the merge
-    full_merged_adata = anndata.concat([merged_adata, query_adata_full[0:142]], axis=1, join="outer", merge="unique", uns_merge="unique")
+#     if not any(query_adata_full.obs_names.str.endswith("-query")):
+#         query_adata_full.obs_names = query_adata_full.obs_names + "-query"
 
-    ## Check that the number of obs is right
-    if not full_merged_adata.n_obs == merged_adata.n_obs:
-        raise AssertionError("The number of obs doesn't match, something is wrong in your join")
+#     ## Do the merge
+#     full_merged_adata = anndata.concat([merged_adata, query_adata_full[0:142]], axis=1, join="outer", merge="unique", uns_merge="unique")
 
-    ## Check that you have more expression vals than before
-    one_query_cell = query_adata_full.obs_names[10]
-    if not len(full_merged_adata[one_query_cell].X.nonzero()[0]) > len(merged_adata[one_query_cell].X.nonzero()[0]):
-        raise AssertionError("You have less or the same expression values for query cells than before. Are you sure that query_adata_full is the dataset before feature selection?")
+#     ## Check that the number of obs is right
+#     if not full_merged_adata.n_obs == merged_adata.n_obs:
+#         raise AssertionError("The number of obs doesn't match, something is wrong in your join")
 
-    return(full_merged_adata)
+#     ## Check that you have more expression vals than before
+#     one_query_cell = query_adata_full.obs_names[10]
+#     if not len(full_merged_adata[one_query_cell].X.nonzero()[0]) > len(merged_adata[one_query_cell].X.nonzero()[0]):
+#         raise AssertionError("You have less or the same expression values for query cells than before. Are you sure that query_adata_full is the dataset before feature selection?")
+
+#     return(full_merged_adata)
 
 ### Utils to propagate cell type labels ### 
 
@@ -236,16 +240,16 @@ def _find_MNNs(merged_adata, k=30, n_jobs=5):
     Find mutual nearest neighbors between query and reference data
     '''
     from scipy.spatial import cKDTree
-    
+
     ## Extract embedding
     X_emb = merged_adata.obsm["X_scvi"].copy()
 
     is_query = merged_adata.obs["dataset"] == "query"
     is_reference = merged_adata.obs["dataset"] == "reference"
-    
+
     X_emb_ref = X_emb[is_reference,:]
     X_emb_que = X_emb[is_query,:]
-    
+
     ## Find mutual nearest neighbors pairs
     # ## Borrowed from chriscainx/mnnpy
     k1=k2=k
@@ -263,27 +267,33 @@ def _find_MNNs(merged_adata, k=30, n_jobs=5):
             if ref_w_nn[index_ref] in k_index_ref[index_query]:
                 mutual_ref.append(ref_w_nn[index_ref])
                 mutual_query.append(index_query)
-    
+
     mutual_query = np.array(mutual_query)
     mutual_ref = np.array(mutual_ref)
-    
+
     ## Convert to array of MNNs
     ref_obs = merged_adata.obs_names[is_reference]
     que_obs = merged_adata.obs_names[is_query]
-    mnn_reference = np.zeros(shape=(ref_obs.shape[0], k))
+    #     mnn_reference = np.zeros(shape=(ref_obs.shape[0], k))
+    mnn_reference = np.empty(shape=(ref_obs.shape[0], k))
+    mnn_reference[:] = np.nan
+
     has_mnn_ixs = np.unique(mutual_ref)
+
     for i in has_mnn_ixs:
         ds = mutual_query[mutual_ref==i]
         mnn_reference[i,0:ds.shape[0]] = ds.copy()
-    mnn_query = np.zeros(shape=(que_obs.shape[0], k))
+
+    mnn_query = np.empty(shape=(que_obs.shape[0], k))
+    mnn_query[:] = np.nan
     has_mnn_ixs = np.unique(mutual_query)
     for i in has_mnn_ixs:
         ds = mutual_ref[mutual_query==i]
         mnn_query[i,0:ds.shape[0]] = ds.copy()
 
-    mnn_reference = mnn_reference.astype("int")
-    mnn_query = mnn_query.astype("int")
-        
+    mnn_reference[~np.isnan(mnn_reference)] = mnn_reference[~np.isnan(mnn_reference)].astype("int")
+    mnn_query[~np.isnan(mnn_query)] = mnn_query[~np.isnan(mnn_query)].astype("int")
+
     return(mnn_query, mnn_reference)
 
 def _scArches_adjusted_dist(dist_nns):
@@ -301,21 +311,21 @@ def _MNN_to_KNN_similarity_ratio(merged_adata, mnn_reference, mnn_query):
     is_query = merged_adata.obs["dataset"] == "query"
     is_reference = merged_adata.obs["dataset"] == "reference"
 
-    has_mnn = np.where(mnn_reference.sum(1) > 0)[0]
+    has_mnn = np.unique(mnn_query[~np.isnan(mnn_query)].astype("int"))
 
     ## Mean similarity between mutual nearest neighbors
     dists = scipy.spatial.distance.cdist(X_emb[is_query,:], X_emb[is_reference,:][has_mnn,:], metric="euclidean")
 
     mnn_dists_reference = mnn_reference.astype("float64").copy()
     for i in range(len(has_mnn)):
-        mnns_ixs = mnn_reference[has_mnn[i], mnn_reference[has_mnn[i],:].nonzero()[0]].ravel()
-        mnn_dists_reference[has_mnn[i],mnn_reference[has_mnn[i],:].nonzero()[0]] = dists[mnns_ixs,i]
+        mnns_ixs = mnn_reference[has_mnn[i]][~np.isnan(mnn_reference[has_mnn[i],:])].astype("int").ravel()
+        mnn_dists_reference[has_mnn[i],~np.isnan(mnn_reference[has_mnn[i],:])] = dists[mnns_ixs,i]
 
     mnn_dists_query = mnn_query.astype("float64").copy()
     for i in range(sum(is_query)):
-        mnns_ixs = mnn_query[i, mnn_query[i,:].nonzero()[0]].ravel()
+        mnns_ixs = mnn_query[i, :][~np.isnan(mnn_query[i,:])].ravel()
         for j in range(len(mnns_ixs)): 
-            mnn_dists_query[i,mnn_query[i,:].nonzero()[0][j]] = dists[i,np.where(has_mnn==mnns_ixs[j])[0]]
+            mnn_dists_query[i,np.where(~np.isnan(mnn_query[i,:]))[0][j]] = dists[i,np.where(has_mnn==mnns_ixs[j])[0]]
 
     ## Adjust distances as in scArches paper
     adj_mnn_dists_reference = mnn_dists_reference.copy()
@@ -327,6 +337,9 @@ def _MNN_to_KNN_similarity_ratio(merged_adata, mnn_reference, mnn_query):
     for i in range(len(mnn_dists_query)):
         if adj_mnn_dists_query[i,mnn_dists_query[i] > 0].shape[0] > 0:
             adj_mnn_dists_query[i,mnn_dists_query[i] > 0] = _scArches_adjusted_dist(mnn_dists_query[i, mnn_dists_query[i] > 0])
+
+    adj_mnn_dists_query[np.isnan(adj_mnn_dists_query)] = 0
+    adj_mnn_dists_reference[np.isnan(adj_mnn_dists_reference)] = 0
 
     mean_mnn_sim_reference = adj_mnn_dists_reference.mean(1)
     mean_mnn_sim_query = adj_mnn_dists_query.mean(1)
@@ -342,20 +355,19 @@ def _MNN_to_KNN_similarity_ratio(merged_adata, mnn_reference, mnn_query):
     ## Mean similarity between nearest neighbors
     mean_knn_sim_reference = adj_knn_dists[is_reference].mean(1)
     mean_knn_sim_query = adj_knn_dists[is_query].mean(1)
-    
+
     mnn_sim_ratio_reference = mean_mnn_sim_reference/mean_knn_sim_reference
     mnn_sim_ratio_query = mean_mnn_sim_query/mean_knn_sim_query
 
-    
     ## Save everything in adata
     merged_adata.obs['knn_sim'] = 0
     merged_adata.obs.loc[is_reference,'knn_sim'] = mean_knn_sim_reference
     merged_adata.obs.loc[is_query,'knn_sim'] = mean_knn_sim_query
-    
+
     merged_adata.obs['mnn_sim'] = 0
     merged_adata.obs.loc[is_reference,'mnn_sim'] = mean_mnn_sim_reference
     merged_adata.obs.loc[is_query,'mnn_sim'] = mean_mnn_sim_query
-    
+
     merged_adata.obs['mnn_sim_ratio'] = 0
     merged_adata.obs.loc[is_reference,'mnn_sim_ratio'] = mnn_sim_ratio_reference
     merged_adata.obs.loc[is_query,'mnn_sim_ratio'] = mnn_sim_ratio_query

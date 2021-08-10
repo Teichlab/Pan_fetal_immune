@@ -1,0 +1,15 @@
+{
+  "R": {
+    "Version": "4.0.4",
+    "Repositories": [
+      {
+        "Name": "REPO_NAME",
+        "URL": "https://packagemanager.rstudio.com/all/latest"
+      }
+    ]
+  },
+  "Python": {
+    "Version": "3.8.8",
+    "Type": "virtualenv"
+  }
+}

@@ -57,9 +57,9 @@ rownames(sce) <- make.unique(rowdata$GeneName)
 ```{r, fig.width=15, fig.height=10}
 ## Plot number of cells per organ/celltype pair
 n_cells_heatmap <- data.frame(colData(sce)) %>%
-  group_by(anno_lvl_2, organ) %>%
+  group_by(anno_lvl_2_final_clean, organ) %>%
   summarise(n_cells=sum(n_cells)) %>%
-  ggplot(aes(anno_lvl_2, organ)) +
+  ggplot(aes(anno_lvl_2_final_clean, organ)) +
   geom_tile(aes(fill=log10(n_cells))) +
   geom_text(aes(label=n_cells), color="white") +
   scale_fill_viridis_c() +
@@ -68,9 +68,9 @@ n_cells_heatmap <- data.frame(colData(sce)) %>%
   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.x = element_blank())
 
 n_samples_heatmap <- data.frame(colData(sce)) %>%
-  group_by(anno_lvl_2, organ) %>%
+  group_by(anno_lvl_2_final_clean, organ) %>%
   summarise(n_samples=n()) %>%
-  ggplot(aes(anno_lvl_2, organ)) +
+  ggplot(aes(anno_lvl_2_final_clean, organ)) +
   geom_tile(aes(fill=n_samples)) +
   geom_text(aes(label=n_samples), color="white") +
   scale_fill_viridis_c(option="cividis") +
@@ -91,37 +91,66 @@ sce <- sce[,sce$n_cells > 20]
 
 # Exclude celltypes present in just one organ
 keep_ct <- data.frame(colData(sce)) %>%
-  select(organ, anno_lvl_2) %>%
+  dplyr::select(organ, anno_lvl_2_final_clean) %>%
   distinct() %>%
-  group_by(anno_lvl_2) %>%
+  group_by(anno_lvl_2_final_clean) %>%
   summarise(n=n()) %>%
   ungroup() %>%
   filter(n > 1) %>%
-  pull(anno_lvl_2)
+  pull(anno_lvl_2_final_clean)
 
-sce <- sce[,sce$anno_lvl_2 %in% keep_ct]
+sce <- sce[,sce$anno_lvl_2_final_clean %in% keep_ct]
 
 # Filter out celltypes with less than 10 samples
 keep_ct <- data.frame(colData(sce)) %>%
-  group_by(anno_lvl_2) %>%
+  group_by(anno_lvl_2_final_clean) %>%
   summarise(n_samples=n()) %>%
   filter(n_samples >= 10) %>%
-  pull(anno_lvl_2)
+  pull(anno_lvl_2_final_clean)
 
-sce <- sce[,sce$anno_lvl_2 %in% keep_ct]
+sce <- sce[,sce$anno_lvl_2_final_clean %in% keep_ct]
 
-## Exclude high mito cells
-sce <- sce[,sce$anno_lvl_2!="HIGH MITO CELLS"]
+## Exclude low quality clusters
+library("rjson")
+anno_groups <- fromJSON(file = "~/Pan_fetal_immune/metadata/anno_groups.json")
+sce <- sce[,!sce$anno_lvl_2_final_clean %in% anno_groups$OTHER]
 
 ## Exclude donor F19 (low Q)
 sce <- sce[,!sce$donor %in% c('F19')]
+```
+
+```{r, fig.width=15, fig.height=10}
+## Plot number of cells per organ/celltype pair
+n_cells_heatmap <- data.frame(colData(sce)) %>%
+  group_by(anno_lvl_2_final_clean, organ) %>%
+  summarise(n_cells=sum(n_cells)) %>%
+  ggplot(aes(anno_lvl_2_final_clean, organ)) +
+  geom_tile(aes(fill=log10(n_cells))) +
+  geom_text(aes(label=n_cells), color="white") +
+  scale_fill_viridis_c() +
+  theme_classic(base_size = 16) +
+  xlab("celltype") +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.x = element_blank())
+
+n_samples_heatmap <- data.frame(colData(sce)) %>%
+  group_by(anno_lvl_2_final_clean, organ) %>%
+  summarise(n_samples=n()) %>%
+  ggplot(aes(anno_lvl_2_final_clean, organ)) +
+  geom_tile(aes(fill=n_samples)) +
+  geom_text(aes(label=n_samples), color="white") +
+  scale_fill_viridis_c(option="cividis") +
+  theme_classic(base_size = 16) +
+  xlab("celltype") +
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0.5))
+
+n_cells_heatmap / n_samples_heatmap
 ```
 
 ### Technical effect correction 
 
 ```{r}
 ## Feature selection w scran WITHIN CELLTYPE
-anno_groups <- split(colnames(sce), sce$anno_lvl_2)
+anno_groups <- split(colnames(sce), sce$anno_lvl_2_final_clean)
 all_hvgs <- c()
 for (i in anno_groups){
   dec <- modelGeneVar(sce[,i])
@@ -174,7 +203,7 @@ plotPCA(sce, colour_by="organ", ncomponents=8)
 
 ```{r}
 ## Feature selection w scran WITHIN CELLTYPE
-anno_groups <- split(colnames(sce), sce$anno_lvl_2)
+anno_groups <- split(colnames(sce), sce$anno_lvl_2_final_clean)
 all_hvgs <- c()
 for (i in anno_groups){
   dec <- modelGeneVar(sce[,i], assay.type = "corrected_logcounts")
@@ -185,7 +214,7 @@ for (i in anno_groups){
 
 <!-- ```{r} -->
 <!-- data.frame(colData(sce)) %>% -->
-<!--   group_by(anno_lvl_2, organ) %>% -->
+<!--   group_by(anno_lvl_2_final_clean, organ) %>% -->
 <!--   summarise(n_samples=n(), n_cells=sum(n_cells)) %>% -->
 <!--   ggplot(aes(n_samples, log10(n_cells))) + -->
 <!--   geom_point(size=0.8, alpha=0.6) -->
@@ -193,7 +222,7 @@ for (i in anno_groups){
 
 <!-- ```{r, fig.width=10, fig.height=10} -->
 <!-- p <- data.frame(reducedDim(sce)[,1:2]) %>% -->
-<!--   mutate(organ=sce$organ, celltype=sce$anno_lvl_2) %>% -->
+<!--   mutate(organ=sce$organ, celltype=sce$anno_lvl_2_final_clean) %>% -->
 <!--   mutate(color=ifelse(celltype=="MATURE B CELL", "ELP", NA)) %>% -->
 <!--   ggplot(aes(PC1, PC2)) + -->
 <!--   geom_point(color="grey") + -->
@@ -210,14 +239,14 @@ for (i in anno_groups){
 
 
 <!-- ```{r} -->
-<!-- sce_matureB <- sce[,sce$anno_lvl_2=="MATURE B CELL"] -->
+<!-- sce_matureB <- sce[,sce$anno_lvl_2_final_clean=="MATURE B CELL"] -->
 <!-- assay(sce_matureB, "scaled_logcounts") <- t(scale(t(logcounts(sce_matureB)))) -->
 
 
 <!-- sce_matureB <- runPCA(sce_matureB, scale=FALSE, ncomponents=30, exprs_values = "scaled_logcounts") -->
 
 <!-- data.frame(reducedDim(sce_matureB)[,2:3]) %>% -->
-<!--   mutate(organ=sce_matureB$organ, celltype=sce_matureB$anno_lvl_2) %>% -->
+<!--   mutate(organ=sce_matureB$organ, celltype=sce_matureB$anno_lvl_2_final_clean) %>% -->
 <!--   mutate(color=ifelse(organ %in% c("TH","BM"), "ELP", NA)) %>% -->
 <!--   ggplot(aes(PC2, PC3)) + -->
 <!--   geom_point(color="grey") + -->
@@ -228,7 +257,7 @@ for (i in anno_groups){
 <!--   ggtitle("MATURE B CELL") -->
 <!-- ``` -->
 <!-- ```{r} -->
-<!-- sce_matureB <- sce[,sce$anno_lvl_2=="NK"] -->
+<!-- sce_matureB <- sce[,sce$anno_lvl_2_final_clean=="NK"] -->
 <!-- assay(sce_matureB, "scaled_logcounts") <- t(scale(t(logcounts(sce_matureB)))) -->
 
 <!-- sce_matureB <- runPCA(sce_matureB, scale=FALSE, ncomponents=30, exprs_values = "scaled_logcounts") -->
@@ -236,7 +265,7 @@ for (i in anno_groups){
 <!-- ## Variance explained -->
 <!-- data.frame(reducedDim(sce_matureB)[,1:4]) %>% -->
 <!--   mutate(organ=sce_matureB$organ,  -->
-<!--          celltype=sce_matureB$anno_lvl_2) %>% -->
+<!--          celltype=sce_matureB$anno_lvl_2_final_clean) %>% -->
 <!--   mutate(color=ifelse(organ %in% c("GU", "SP"), "ELP", NA)) %>% -->
 <!--   ggplot(aes(PC1, PC3)) + -->
 <!--   geom_point(color="grey") + -->
@@ -250,7 +279,7 @@ for (i in anno_groups){
 
 <!-- ```{r} -->
 <!-- data.frame(reducedDim(sce_matureB)[,2:3]) %>% -->
-<!--   mutate(organ=sce_matureB$organ, celltype=sce_matureB$anno_lvl_2) %>% -->
+<!--   mutate(organ=sce_matureB$organ, celltype=sce_matureB$anno_lvl_2_final_clean) %>% -->
 <!--   mutate(color=ifelse(celltype=="MATURE B CELL", "ELP", NA)) %>% -->
 <!--   ggplot(aes(PC2, PC3)) + -->
 <!--   geom_point(color="grey") + -->
@@ -266,39 +295,48 @@ Make MOFA object (Use celltypes as grouping covariate)
 
 ```{r}
 mofa <- create_mofa_from_SingleCellExperiment(sce[all_hvgs,], assay = "corrected_logcounts", 
-                                              groups = "anno_lvl_2", extract_metadata = TRUE)
+                                              groups = "anno_lvl_2_final_clean", extract_metadata = TRUE)
+
+
 
 saveRDS(mofa, glue('{indir}LYMPHOID_mofa_obj_organCorrected.RDS'))
+mofa_obj <- readRDS(glue('{indir}LYMPHOID_mofa_obj_organCorrected.RDS'))
 ```
+```{r}
+object <- mofa_obj
+```
+
 
 Prepare 4 training
 
 ```{r}
-data_opts <- get_default_data_options(mofa)
+
+data_opts <- get_default_data_options(object)
 data_opts$use_float32 <- TRUE
 data_opts$center_groups <- FALSE
+object@data_options <- data_opts
 
-model_opts <- get_default_model_options(mofa)
+model_opts <- get_default_model_options(object)
 model_opts$num_factors <- 30
+model_opts$ard_factors <- FALSE
 
-train_opts <- get_default_training_options(mofa)
+train_opts <- get_default_training_options(object)
 train_opts$seed <- 2020
 train_opts$convergence_mode <- "medium" # use "fast" for faster training
 train_opts$stochastic <- FALSE
 
-mefisto_opts <- get_default_mefisto_options(mofa)
-mefisto_opts$warping <- FALSE
+# mefisto_opts <- get_default_mefisto_options(object)
+# mefisto_opts$warping <- FALSE
 # mefisto_opts$sparseGP <- TRUE
 
-mofa <- prepare_mofa(
-  object = mofa,
+object <- prepare_mofa(
+  object = object,
   data_options = data_opts,
   model_options = model_opts,
-  training_options = train_opts,
-  mefisto_options = mefisto_opts
+  training_options = train_opts
 ) 
 
-mofa
+object
 ```
 
 ## Train
@@ -306,8 +344,24 @@ mofa
 Wrapped in `run_mofa.R`
 
 ```{r}
+# install.packages(renv)
+# renv::init()
+renv::install("reticulate")
+renv::use_python()
+
+py_pkgs <- c(
+    "scanpy",
+    "anndata",
+    "mofapy2"
+)
+
+reticulate::py_install(py_pkgs)
+```
+
+
+```{r}
 outfile <- glue('{indir}{split}_mofa_model_oneview_organCorrected.hdf5')
-mofa_trained <- run_mofa(mofa, outfile = outfile)
+mofa_trained <- run_mofa(object, outfile = outfile)
 ```
 
 ```{r}
@@ -402,67 +456,67 @@ load_model <- function(file, sort_factors = TRUE, on_disk = FALSE, load_data = T
     object@features_metadata <- bind_rows(lapply(view_names, function(m) as.data.frame(h5read(file, sprintf("features_metadata/%s", m)))))
   }
   
-  ############################
-  ## Load sample covariates ##
-  ############################
-  
-  if (any(grepl("cov_samples", h5ls.out$group))){
-    covariates <- list()
-    for (g in group_names) {
-      if (on_disk) {
-        # as DelayedArrays
-        covariates[[g]] <- DelayedArray::DelayedArray( HDF5ArraySeed(file, name = sprintf("cov_samples/%s", g) ) )
-      } else {
-        # as matrices
-        covariates[[g]] <- h5read(file, sprintf("cov_samples/%s", g) )
-      }    
-    }
-  } else covariates <- NULL
-  object@covariates <- covariates
+  # ############################
+  # ## Load sample covariates ##
+  # ############################
+  # 
+  # if (any(grepl("cov_samples", h5ls.out$group))){
+  #   covariates <- list()
+  #   for (g in group_names) {
+  #     if (on_disk) {
+  #       # as DelayedArrays
+  #       covariates[[g]] <- DelayedArray::DelayedArray( HDF5ArraySeed(file, name = sprintf("cov_samples/%s", g) ) )
+  #     } else {
+  #       # as matrices
+  #       covariates[[g]] <- h5read(file, sprintf("cov_samples/%s", g) )
+  #     }    
+  #   }
+  # } else covariates <- NULL
+  # object@covariates <- covariates
 
-  if (any(grepl("cov_samples_transformed", h5ls.out$group))){
-    covariates_warped <- list()
-    for (g in group_names) {
-      if (on_disk) {
-        # as DelayedArrays
-        covariates_warped[[g]] <- DelayedArray::DelayedArray( HDF5ArraySeed(file, name = sprintf("cov_samples_transformed/%s", g) ) )
-      } else {
-        # as matrices
-        covariates_warped[[g]] <- h5read(file, sprintf("cov_samples_transformed/%s", g) )
-      }    
-    }
-  } else covariates_warped <- NULL
-  object@covariates_warped <- covariates_warped
+  # if (any(grepl("cov_samples_transformed", h5ls.out$group))){
+  #   covariates_warped <- list()
+  #   for (g in group_names) {
+  #     if (on_disk) {
+  #       # as DelayedArrays
+  #       covariates_warped[[g]] <- DelayedArray::DelayedArray( HDF5ArraySeed(file, name = sprintf("cov_samples_transformed/%s", g) ) )
+  #     } else {
+  #       # as matrices
+  #       covariates_warped[[g]] <- h5read(file, sprintf("cov_samples_transformed/%s", g) )
+  #     }    
+  #   }
+  # } else covariates_warped <- NULL
+  # object@covariates_warped <- covariates_warped
   
-  #######################
-  ## Load interpolated factor values ##
-  #######################
-  
-  interpolated_Z <- list()
-  if (isTRUE(load_interpol_Z)) {
-    
-    if (isTRUE(verbose)) message("Loading interpolated factor values...")
-    
-    for (g in group_names) {
-      interpolated_Z[[g]] <- list()
-      if (on_disk) {
-        # as DelayedArrays
-        # interpolated_Z[[g]] <- DelayedArray::DelayedArray( HDF5ArraySeed(file, name = sprintf("Z_predictions/%s", g) ) )
-      } else {
-        # as matrices
-        tryCatch( {
-          interpolated_Z[[g]][["mean"]] <- h5read(file, sprintf("Z_predictions/%s/mean", g) )
-        }, error = function(x) { print("Predicitions of Z not found, not loading it...") })
-        tryCatch( {
-          interpolated_Z[[g]][["variance"]] <- h5read(file, sprintf("Z_predictions/%s/variance", g) )
-        }, error = function(x) { print("Variance of predictions of Z not found, not loading it...") })
-        tryCatch( {
-          interpolated_Z[[g]][["new_values"]] <- h5read(file, "Z_predictions/new_values")
-        }, error = function(x) { print("New values of Z not found, not loading it...") })
-      }
-    }
-  }
-  object@interpolated_Z <- interpolated_Z
+  # #######################
+  # ## Load interpolated factor values ##
+  # #######################
+  # 
+  # interpolated_Z <- list()
+  # if (isTRUE(load_interpol_Z)) {
+  #   
+  #   if (isTRUE(verbose)) message("Loading interpolated factor values...")
+  #   
+  #   for (g in group_names) {
+  #     interpolated_Z[[g]] <- list()
+  #     if (on_disk) {
+  #       # as DelayedArrays
+  #       # interpolated_Z[[g]] <- DelayedArray::DelayedArray( HDF5ArraySeed(file, name = sprintf("Z_predictions/%s", g) ) )
+  #     } else {
+  #       # as matrices
+  #       tryCatch( {
+  #         interpolated_Z[[g]][["mean"]] <- h5read(file, sprintf("Z_predictions/%s/mean", g) )
+  #       }, error = function(x) { print("Predicitions of Z not found, not loading it...") })
+  #       tryCatch( {
+  #         interpolated_Z[[g]][["variance"]] <- h5read(file, sprintf("Z_predictions/%s/variance", g) )
+  #       }, error = function(x) { print("Variance of predictions of Z not found, not loading it...") })
+  #       tryCatch( {
+  #         interpolated_Z[[g]][["new_values"]] <- h5read(file, "Z_predictions/new_values")
+  #       }, error = function(x) { print("New values of Z not found, not loading it...") })
+  #     }
+  #   }
+  # }
+  # object@interpolated_Z <- interpolated_Z
   
   #######################
   ## Load expectations ##
@@ -618,14 +672,14 @@ load_model <- function(file, sort_factors = TRUE, on_disk = FALSE, load_data = T
   samples_names(object) <- sample_names
 
   # Add covariates names
-  if(!is.null(object@covariates)){
-    # Create default covariates names if they are null
-    if (is.null(covariate_names)) {
-      print("Covariate names not found, generating default: covariate1, ..., covariateC")
-      covariate_names <- paste0("sample", as.character(seq_len(object@dimensions[["C"]])))
-    }
-    covariates_names(object) <- covariate_names
-  }
+  # if(!is.null(object@covariates)){
+  #   # Create default covariates names if they are null
+  #   if (is.null(covariate_names)) {
+  #     print("Covariate names not found, generating default: covariate1, ..., covariateC")
+  #     covariate_names <- paste0("sample", as.character(seq_len(object@dimensions[["C"]])))
+  #   }
+  #   covariates_names(object) <- covariate_names
+  # }
   
   # Set views names
   if (is.null(names(object@data))) {
@@ -1044,7 +1098,7 @@ for (g in all_groups){
 
 ```
 ```{r, fig.width=18}
-plot_data_heatmap(mofa_trained, factor = 2, show_colnames=FALSE, annotation_samples = c("anno_lvl_2", "organ"))
+plot_data_heatmap(mofa_trained, factor = 2, show_colnames=FALSE, annotation_samples = c("anno_lvl_2_final_clean", "organ"))
 plot_factor(mofa_trained, factor=25, color_by="method", dot_size = 4)
 ```
 

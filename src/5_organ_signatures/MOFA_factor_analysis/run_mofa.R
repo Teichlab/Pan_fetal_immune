@@ -16,22 +16,23 @@ data_opts$center_groups <- FALSE
 
 model_opts <- get_default_model_options(mofa)
 model_opts$num_factors <- 30
+model_opts$
 
 train_opts <- get_default_training_options(mofa)
 train_opts$seed <- 2020
 train_opts$convergence_mode <- "medium" # use "fast" for faster training
 train_opts$stochastic <- FALSE
 
-mefisto_opts <- get_default_mefisto_options(mofa)
-mefisto_opts$warping <- FALSE
+# mefisto_opts <- get_default_mefisto_options(mofa)
+# mefisto_opts$warping <- FALSE
 # mefisto_opts$sparseGP <- TRUE
 
 mofa <- prepare_mofa(
   object = mofa,
   data_options = data_opts,
   model_options = model_opts,
-  training_options = train_opts,
-  mefisto_options = mefisto_opts
+  training_options = train_opts
+#   mefisto_options = mefisto_opts
 ) 
 
 outfile <- glue('{indir}{split}_mofa_model_oneview_organCorrected.hdf5')

@@ -99,30 +99,28 @@ if len(spl)==0:
 else:
     h5ad_file = data_dir + 'PAN.A01.v01.entire_data_normalised_log.{t}.{s}.embedding.h5ad'.format(t=timestamp, s=spl)
 
-## Read adata
 print("Loading data...")
 adata = sc.read_h5ad(h5ad_file)
 
+## Filter maternal contaminants
+mat_barcodes = pd.read_csv("~/Pan_fetal_immune/metadata/souporcell_results/maternal_barcodes.csv", index_col=0)
+mat_barcodes["x"] = pd.Series([x.split("-1")[0] for x in mat_barcodes['x']])
+adata = adata[~adata.obs_names.isin(mat_barcodes["x"])]
+
 # Add annotation obs
-anno_dir = "/nfs/team205/ed6/bin/Pan_fetal_immune/metadata/manual_annotation/"
-anno_df = pd.read_csv(anno_dir + 'PAN.A01.v01.entire_data_normalised_log.{t}.{s}.csv'.format(t=timestamp, s=spl), index_col=0)
-adata.obs = pd.concat([adata.obs, anno_df],1).loc[adata.obs_names]
-
-# Rename funky organ
-adata.obs.loc[adata.obs.organ=="TH(pharyn)","organ"] = "TH"
-
-### Subset to cells of interest ###
-# adata = merged_raw[~merged_raw.obs["anno_lvl_2_MYELOID"].isna()]
-# adata.obs["anno_lvl_2"] = adata.obs["anno_lvl_2_MYELOID"]
+# anno_dir = "/nfs/team205/ed6/bin/Pan_fetal_immune/metadata/manual_annotation/"
+anno_obs = pd.read_csv(data_dir + "PAN.A01.v01.entire_data_normalised_log.20210429.full_obs.annotated.clean.csv", index_col=0)
+adata = adata[adata.obs_names.isin(anno_obs.index)].copy()
+adata.obs["anno_lvl_2_final_clean"] = anno_obs.loc[adata.obs_names]["anno_lvl_2_final_clean"]
 
 ### Pseudobulking ###
 pseudobulk=True
 if pseudobulk:
-    adata = anndata2pseudobulk(adata, ["Sample", "donor", "organ", "anno_lvl_2", "age", "method"], agg="m")
+    adata = anndata2pseudobulk(adata, ["Sample", "donor", "organ", "anno_lvl_2_final_clean", "age", "method"], agg="m")
     adata_id = spl + "_PBULK"
 else:
     adata_id = spl
 
 ### Save data
-save_4_lmm(adata, adata_id, covs=["Sample", "donor", "organ", "anno_lvl_2", "age", "method", "n_cells"])
+save_4_lmm(adata, adata_id, covs=["Sample", "donor", "organ", "anno_lvl_2_final_clean", "age", "method", "n_cells"])
 

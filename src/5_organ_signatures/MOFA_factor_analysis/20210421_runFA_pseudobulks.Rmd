@@ -22,6 +22,10 @@ output: html_notebook
 # BiocManager::install(c("SingleCellExperiment", "scran", "batchelor", "scater"))
 # install.packages(c("patchwork"))
 ```
+```{r}
+renv::activate()
+```
+
 
 ```{r}
 suppressPackageStartupMessages({
@@ -139,6 +143,7 @@ sce <- sce[,!sce$anno_lvl_2_final_clean %in% anno_groups$OTHER]
 sce <- sce[,!sce$donor %in% c('F19')]
 ```
 
+
 ```{r, fig.width=15, fig.height=10}
 ## Plot number of cells per organ/celltype pair
 n_cells_heatmap <- data.frame(colData(sce)) %>%
@@ -164,6 +169,36 @@ n_samples_heatmap <- data.frame(colData(sce)) %>%
   theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0.5))
 
 n_cells_heatmap / n_samples_heatmap
+```
+
+```{r, fig.width=15, fig.height=10}
+organ_order <- c("YS", "LI", "BM", "TH", "SP", "SK","KI","GU", "MLN")
+pl <- data.frame(colData(sce)) %>%
+  dplyr::group_by(anno_lvl_2_final_clean, organ) %>%
+  dplyr::summarise(n_cells=sum(n_cells), n_samples=dplyr::n()) %>%
+  dplyr::group_by(anno_lvl_2_final_clean) %>%
+  dplyr::mutate(n_organs=dplyr::n(), org_frac=n_cells/sum(n_cells)) %>%
+  ## is the ct overrepresented in one organ?
+  dplyr::mutate(delta_max_org_frac = max(org_frac)-org_frac) %>% 
+  dplyr::mutate(mean_delta_max_org_frac = mean(delta_max_org_frac)) %>% 
+  dplyr::ungroup() %>%
+  dplyr::arrange(n_organs, -mean_delta_max_org_frac) %>%
+  dplyr::mutate(anno_lvl_2_final_clean=factor(anno_lvl_2_final_clean, levels=rev(unique(anno_lvl_2_final_clean)))) %>%
+  dplyr::mutate(organ=factor(organ, levels=rev(organ_order))) %>%
+  ggplot(aes(anno_lvl_2_final_clean, organ)) +
+  geom_point(aes(color=log10(n_cells), size=n_samples)) +
+  geom_text(aes(label=n_cells), color="white") +
+  scale_size(range=c(7,18), breaks = c(0,1,10,30), name="# samples") +
+  scale_fill_viridis_c() +
+  scale_color_viridis_c(name="log10(# cells)") +
+  theme_classic(base_size = 20) +
+  xlab("celltype") +
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0.5)) 
+
+## Save order of CTs from widespread to restricted
+anno_order <- levels(pl$data$anno_lvl_2_final_clean)
+
+ggsave(paste0(figdir, "ct_organ_distribution.pdf"), pl, width = 15, height = 10)
 ```
 
 ### Technical effect correction 
@@ -766,6 +801,364 @@ rownames(samples_metadata(mofa_trained)) <- samples_metadata(mofa_trained)[["sam
 
 
 ```
+
+
+### Prune factors
+
+#### Visualize variance explained by factors
+
+```{r}
+get_variance_explained(mofa_trained, as.data.frame = TRUE, )[[1]] %>%
+  dplyr::mutate(group=factor(group, levels=rev(anno_order))) %>% 
+  ggplot(aes(factor,group, fill=value)) +
+  geom_tile() +
+  scale_fill_viridis_c() +
+  theme(axis.text.x = element_text(angle=45, hjust=1))
+
+get_variance_explained(mofa_trained, as.data.frame = TRUE, )[[2]] %>%
+  dplyr::mutate(group=factor(group, levels=anno_order)) %>%
+  ggplot(aes(group, value)) +
+  geom_col() +
+  coord_flip() +
+  ylab("Var. (%)") +
+  theme_classic(base_size=14)
+```
+
+
+#### Identify technical factors
+
+Do factors relate to the number of cells in pseudobulk?
+```{r, fig.width=12, fig.height=4}
+n_cells <- mofa_trained@samples_metadata[,'n_cells', drop=FALSE]
+Z <- get_factors(mofa_trained)
+Z <- purrr::reduce(Z, rbind)
+barplot(cor(n_cells, Z))
+```
+
+Distinguish technical factors by weight sparsity
+
+```{r}
+get_weights(mofa_trained, abs=TRUE, scale = FALSE, as.data.frame = TRUE) %>%
+  dplyr::group_by(factor) %>%
+  dplyr::mutate(value=(value - min(value))/(max(value)- min(value)), rank=rank(value)) %>%
+  dplyr::summarise(frac_zeros=sum(value < 0.05)/dplyr::n()) %>%
+  ggplot(aes(factor, frac_zeros)) +
+  geom_col() +
+  coord_flip() +
+  geom_hline(yintercept = 0.5, color="red")
+```
+
+```{r}
+exclude_factors <- get_weights(mofa_trained, abs=TRUE, scale = FALSE, as.data.frame = TRUE) %>%
+  dplyr::group_by(factor) %>%
+  dplyr::mutate(value=(value - min(value))/(max(value)- min(value)), rank=rank(value)) %>%
+  dplyr::summarise(frac_zeros=sum(value < 0.05)/dplyr::n()) %>%
+  dplyr::filter(frac_zeros < 0.55) %>%
+  dplyr::pull(factor)
+```
+
+
+```{r}
+high_r2_groups_df <- get_variance_explained(mofa_trained, as.data.frame = TRUE)[[1]] %>%
+  dplyr::filter(!factor %in% exclude_factors) %>%
+  dplyr::group_by(group) %>%
+  dplyr::mutate(tot_var=sum(value)) %>%
+  dplyr::ungroup() %>%
+  dplyr::arrange(tot_var) %>%
+  dplyr::mutate(group=factor(group, levels = unique(group))) %>%
+  dplyr::mutate(value=ifelse(value < 5, NA, value)) %>%
+  dplyr::filter(!is.na(value)) 
+
+high_r2_groups_df %>%
+  ggplot(aes(factor,group, fill=value)) +
+  geom_tile() +
+  scale_fill_gradientn(colors=c("gray97","darkblue"), guide="colorbar") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle=45, hjust=1)) 
+  
+```
+
+#### Find factors that separate pseudobulks by tissue
+
+Calculating Adjusted Mutual Information between organ identity and clustering of pseudobulks based on factor values
+
+```{r, fig.width=15, fig.height=6}
+calc_organ_AMI <- function(f, g){
+  dmat <- dist(get_factors(mofa_trained, factors = f, groups = g)[[1]]) 
+  hcl <- hclust(dmat)
+  n_organs <- length(unique(samples_metadata(mofa_trained)[rownames(as.matrix(dmat)),'organ']))
+  hcl_df <- data.frame(clust=cutree(hcl, k=n_organs)) %>%
+    tibble::rownames_to_column("sample") %>%
+    dplyr::left_join(samples_metadata(mofa_trained)) 
+  organ_AMI <- aricode::AMI(hcl_df$clust, as.numeric(hcl_df$organ))
+  return(organ_AMI)
+}
+
+samples_metadata(mofa_trained)$organ <- as.factor(samples_metadata(mofa_trained)$organ)
+## Calc adjusted mutual info for each factor
+AMIs <- sapply(1:nrow(high_r2_groups_df), function(i) calc_organ_AMI(high_r2_groups_df$factor[i], high_r2_groups_df$group[i]))
+
+## Calc adjusted mutual info for all factors that explan > 2% variance 
+groups <- as.character(unique(high_r2_groups_df$group))
+ct_AMIs <- sapply(groups, function(g) calc_organ_AMI(high_r2_groups_df$factor[high_r2_groups_df$group == g], g))
+
+AMI_pl <- data.frame(ct_AMIs) %>%
+  dplyr::arrange(ct_AMIs) %>%
+  tibble::rownames_to_column("celltype") %>%
+  # dplyr::mutate(celltype=factor(rowname, levels=unique(rowname))) %>%
+dplyr::mutate(celltype=factor(celltype, levels=rev(anno_order))) %>%
+  ggplot(aes(ct_AMIs, celltype)) +
+  geom_col() +
+  xlab("Total Organ AMI") +
+  theme_classic(base_size = 16)
+  
+AMI_f_pl <- high_r2_groups_df %>%
+  dplyr::mutate(org_AMI=AMIs) %>%
+  dplyr::mutate(group=factor(group, levels=levels(AMI_pl$data$celltype))) %>%
+  ggplot(aes(factor, group, fill=org_AMI)) +
+  geom_tile(color='black') +
+  # scale_fill_gradientn(colors=c("gray97","red"), name="Organ Adj. Mutual Info") +
+  scale_fill_viridis_c(option='magma') +
+  theme_classic(base_size = 16) +
+  theme(axis.text.x = element_text(angle=45, hjust=1))   
+
+AMI_f_pl + (AMI_pl + remove_y_axis()) +
+  plot_layout(guides="collect", widths = c(8,3))
+```
+
+```{r, fig.height=9, fig.width=7}
+## Save info on MI
+high_r2_groups_df <- high_r2_groups_df %>%
+  dplyr::mutate(org_AMI=AMIs) 
+
+## Fix long names for plotting
+all_groups <- names(get_data(mofa_trained)[[1]])
+group_labeller <- all_groups %>%
+  str_replace_all("_", " ") %>%
+  {ifelse(nchar(.) > 20, str_replace(., " ", "\n"), .)} %>%
+  setNames(all_groups)
+
+AMI_pl_df <- high_r2_groups_df %>%
+  dplyr::group_by(group) %>%
+  dplyr::mutate(mean_AMI=max(org_AMI)) %>%
+  dplyr::ungroup() %>%
+  dplyr::arrange(mean_AMI) %>%
+  dplyr::mutate(group=group_labeller[as.character(group)]) %>%
+  dplyr::mutate(group=factor(group, levels=unique(group))) 
+
+AMI_pl_df %>%
+  ggplot(aes(org_AMI, group)) +
+  geom_point(aes(fill=value), size=3, shape=21) +
+  ggrepel::geom_text_repel(aes(label=str_remove(factor, "Factor")), color="black", force = 0.1, direction = 'x',
+                           nudge_y           = 0.4,
+    hjust             = 0) +
+  xlab("Adj. Mutual Information - Organ ") +
+  scale_fill_gradientn(colours = c("white", "red"), name="% var. explained") +
+  theme_bw(base_size = 15)
+
+
+```
+```{r, fig.height=8, fig.width=8}
+for (fact in as.character(unique(AMI_pl_df$factor))){
+  p <- AMI_pl_df %>%
+    ggplot(aes(org_AMI, group)) +
+    geom_point(fill="grey", size=2, shape=21, color="grey") +
+    geom_point(data = . %>% dplyr::filter(factor==fact),
+                 aes(fill=value), size=3, shape=21) +
+    xlab("Adj. Mutual Information - Organ ") +
+    scale_fill_gradientn(colours = c("white", "red"), name="% var. explained") +
+    theme_bw(base_size = 15) +
+    ggtitle(fact)
+  print(p)
+  }
+```
+### Expression of top R2 factors
+
+```{r}
+get_top_weight_genes <- function(mofa_trained, f, n_top=20, which="top"){
+  w_df <- get_weights(mofa_trained, factors = f, as.data.frame = TRUE) %>%
+    dplyr::arrange(value) 
+  top_genes <- w_df %>%
+      dplyr::top_n(n_top, value) %>%
+      dplyr::pull(feature) %>%
+      as.character()
+  bot_genes <-  w_df %>%
+      dplyr::top_n(n_top, -value) %>%
+      dplyr::pull(feature) %>%
+      as.character()
+  if (which=="top") {
+    genes <- top_genes
+  } else if (which=="bottom"){
+    genes <- bot_genes
+  } else if (which=="both"){
+    genes <- c(top_genes, bot_genes)
+  }
+  return(genes)
+}
+
+plot_data_top_weights <- function(mofa_trained, ct, f, n_top=20, which="top"){
+  genes <- get_top_weight_genes(mofa_trained, f, which=which, n_top=n_top)
+  data <- get_data(mofa_trained, groups=ct)[[1]][[1]][genes,]
+  
+  pl_df <- reshape2::melt(data, varnames=c("gene", "sample")) %>%
+    dplyr::left_join(samples_metadata(mofa_trained)) %>%
+    dplyr::arrange(age) %>%
+    dplyr::mutate(sample=factor(sample, levels=unique(sample))) %>%
+    dplyr::group_by(gene) %>%
+    dplyr::mutate(value=scale(value))
+  pl_df %>%
+    ggplot(aes(sample, gene, fill=value)) +
+    geom_tile() +
+    facet_grid(.~organ, space="free", scales="free") +
+    scale_fill_gradient2(high="red", low="blue", name="Scaled\nexpression") +
+    xlab("----age--->") + ylab(glue("{which} weight genes")) +
+    theme_bw(base_size=16) +
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank()) +
+    ggtitle(glue('{ct} - {f}'))
+}
+
+for (g in all_groups){
+  fs <- get_top_factor_per_celltype(mofa_trained, g, min_R2=5)
+  fs <- fs[!fs %in% exclude_factors]
+  if (length(fs) > 0){
+    top_plots <- lapply(fs, function(x) (plot_data_top_weights(mofa_trained, g, x, which="top") + remove_x_axis()) /  
+                          plot_data_top_weights(mofa_trained, g, x, which="bottom") + ggtitle("")
+    )
+    full_pl <-wrap_plots(top_plots, ncol=1) 
+    ggsave(glue("{figdir}/top_factors_expr_{g}.pdf"),plot=full_pl,  width=12, height = 10*length(top_plots))
+    }  
+}
+
+```
+
+
+<!-- ```{r} -->
+<!-- ## reorder organs -->
+<!-- samples_metadata(mofa_trained)$organ <- factor(samples_metadata(mofa_trained)$organ, levels=organ_order) -->
+<!-- for (g in all_groups){ -->
+<!--   fs <- get_top_factor_per_celltype(mofa_trained, g, min_R2=2) -->
+<!--   fs <- fs[!fs %in% exclude_factors] -->
+<!--   if (length(fs) > 0){ -->
+<!--       pl <- plot_factor(mofa_trained,groups = c(g), color_by="organ", dot_size = 3, factors = fs, -->
+<!--             add_boxplot = TRUE, boxplot_alpha = 0.1, -->
+<!--             group_by = "organ", scale = ) + -->
+<!--     scale_fill_manual(values=org_colors) + -->
+<!--     scale_color_manual(values=org_colors) + -->
+<!--     ggtitle(g) -->
+<!--     print(pl) -->
+<!--   } -->
+<!--   } -->
+<!-- ``` -->
+
+<!-- ```{r, fig.height=15, fig.width=15} -->
+<!-- gr_top_factors <- lapply(all_groups, function(g) data.frame(group=g, top_factors=get_top_factor_per_celltype(mofa_trained, g, min_R2=2))) %>% -->
+<!--   purrr::reduce(dplyr::bind_rows) %>% -->
+<!--   dplyr::filter(!top_factors %in% exclude_factors) -->
+
+<!-- for (f in unique(gr_top_factors$top_factors)){ -->
+<!--   gs <- dplyr::filter(gr_top_factors, top_factors==f) %>% dplyr::pull(group) -->
+<!--   pl_ls <- lapply(gs, function(g) plot_factor(mofa_trained,groups = c(g), color_by="organ", dot_size = 3, factors = f, -->
+<!--             add_boxplot = TRUE, boxplot_alpha = 0.1,  -->
+<!--             group_by = 'group', dodge = TRUE) + -->
+<!--     scale_fill_manual(values=org_colors) + -->
+<!--     scale_color_manual(values=org_colors) + -->
+<!--     ggtitle(g)) -->
+<!--  print(wrap_plots(pl_ls) + plot_layout(guides="collect") + plot_annotation(title=f))  -->
+<!--   } -->
+<!-- ``` -->
+
+
+
+```{r, fig.width=18, fig.height=7}
+minmax_normalize <- function(x, na.rm = TRUE) {
+    return((x- min(x)) /(max(x)-min(x)))
+}
+
+plot_data_top_weights_clustered <- function(mofa_trained, cts, f, n_top=20, which="top", scale_data=TRUE){
+  genes <- get_top_weight_genes(mofa_trained, f, which=which, n_top=n_top)
+  
+  genes_anno <- data.frame(gene=genes) 
+  if (which!="both"){ genes_anno[["weight"]] <- rep(which, n_top) }  else { genes_anno[["weight"]] <- c(rep("top", n_top), rep("bottom", n_top)) }
+  
+  data_ls <- get_data(mofa_trained, groups=cts)[[1]]
+  data <- Reduce(cbind, data_ls)[genes,]
+  
+  ct_pl_ls <- lapply(cts, function(ct){
+    ct_samples <- colnames(mofa_trained@data[[1]][[ct]])
+    ct_data <- data[,ct_samples]
+    if (scale_data){
+      ct_data <- t(apply(ct_data, 1, minmax_normalize))
+    }
+    cl_heatmap <- pheatmap::pheatmap(ct_data, show_colnames= FALSE, cluster_rows = FALSE, )
+    col_order <- cl_heatmap$tree_col$labels[cl_heatmap$tree_col$order]
+    
+    pl_df <- reshape2::melt(ct_data, varnames=c("gene", "sample")) %>%
+        dplyr::left_join(samples_metadata(mofa_trained)) %>%
+        dplyr::left_join(genes_anno) %>%
+        dplyr::mutate(sample=factor(sample, levels=col_order),
+                      weight=factor(weight, levels=c("top", "bottom"))) 
+    
+    pl_bar <- pl_df %>% 
+      ggplot(aes(sample, "organ", fill=organ)) +
+      geom_tile() +
+      scale_fill_manual(values=org_colors) +
+      theme_void() +
+      theme(legend.position = "none")
+    pl_hm <- pl_df %>%
+      ggplot(aes(sample, gene, fill=value)) +
+        geom_tile() +
+        scale_fill_viridis_c(option="magma", name="Scaled\nexpression") +
+        xlab(group_labeller[ct]) +
+        facet_grid(weight~., scales="free", space="free") +
+        theme_bw(base_size=12) +
+        theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+    (pl_bar / pl_hm) + plot_layout(heights = c(1,10))
+    })
+  if (length(ct_pl_ls) > 1){
+    ## Remove gene names to all except 1st plot
+    ct_pl_ls[2:length(ct_pl_ls)] <- lapply(ct_pl_ls[2:length(ct_pl_ls)], function(p) p + remove_y_axis())
+    
+    ## Remove strip names to all except last plot
+    ct_pl_ls[1:(length(ct_pl_ls)-1)] <- lapply(ct_pl_ls[1:(length(ct_pl_ls)-1)], function(p) p + theme(strip.background = element_blank(),strip.text.y = element_blank()))
+    wrap_plots(ct_pl_ls) + 
+    plot_layout(guides="collect", nrow = 1)
+  } else {
+    ct_pl_ls[[1]]
+  }
+}
+
+plot_factor_organ_boxplots <- function(f, cts){
+  pl_ls <- lapply(cts, function(g) plot_factor(mofa_trained,groups = c(g), color_by="organ", dot_size = 3, factors = f,
+            add_boxplot = TRUE, boxplot_alpha = 0.1, 
+            group_by = 'group', dodge = TRUE) +
+    scale_fill_manual(values=org_colors) +
+    scale_color_manual(values=org_colors) +
+    ggtitle(group_labeller[g]) 
+    )
+ wrap_plots(pl_ls) + 
+   plot_layout(guides="collect", nrow=1) + 
+   plot_annotation(title=f) 
+}
+
+high_r2_groups_df_filt <- high_r2_groups_df %>%
+  dplyr::filter(org_AMI > 0.3) %>%
+  dplyr::arrange(- org_AMI) 
+
+for (fact in as.character(unique(high_r2_groups_df_filt$factor))){
+  fact_cts = as.character(high_r2_groups_df_filt$group[high_r2_groups_df_filt$factor==fact])
+  p_top <- plot_factor_organ_boxplots(cts=fact_cts, f=fact)
+  p_bottom <- plot_data_top_weights_clustered(mofa_trained, cts=fact_cts, f=fact, which = "both", scale_data = TRUE)
+  f_pl <- (p_top / p_bottom) +
+    plot_layout(heights = c(1,2.5))
+  
+  ggsave(glue("{figdir}/{fact}_top_organ_AMI_plot.pdf"), plot=f_pl,  width=5 + (3*length(fact_cts)), height = 9)
+}
+```
+
+
+---
+---
+
 
 ### Visualize variance explained by factors
 

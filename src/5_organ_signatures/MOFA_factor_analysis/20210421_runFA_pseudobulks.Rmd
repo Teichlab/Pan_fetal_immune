@@ -7,8 +7,25 @@ output: html_notebook
 
 ```{r}
 # install.packages(renv)
-# renv::init()
-# renv::install("reticulate")
+renv::init()
+renv::install("reticulate")
+renv::use_python()
+
+py_pkgs <- c(
+    "scanpy",
+    "anndata",
+    "mofapy2"
+)
+
+reticulate::py_install(py_pkgs)
+
+BiocManager::install(c("SingleCellExperiment", "scran", "batchelor", "scater", 'tidyverse'))
+install.packages(c("patchwork"))
+```
+
+```{r}
+# setwd('~/Pan_fetal_immune/src/5_organ_signatures/MOFA_factor_analysis/')
+# renv::activate()
 # renv::use_python()
 # 
 # py_pkgs <- c(
@@ -18,16 +35,12 @@ output: html_notebook
 # )
 # 
 # reticulate::py_install(py_pkgs)
-# 
-# BiocManager::install(c("SingleCellExperiment", "scran", "batchelor", "scater"))
-# install.packages(c("patchwork"))
-```
-```{r}
-renv::activate()
 ```
 
 
+
 ```{r}
+# install.packages("ellipsis")
 suppressPackageStartupMessages({
   library(tidyverse)
   library(MOFA2)
@@ -141,6 +154,29 @@ sce <- sce[,!sce$anno_lvl_2_final_clean %in% anno_groups$OTHER]
 
 ## Exclude donor F19 (low Q)
 sce <- sce[,!sce$donor %in% c('F19')]
+```
+
+
+```{r}
+## Exclude donors for which we have only one organ
+keep.donors <- data.frame(colData(sce))[c("Sample", "donor", "organ", 'age')] %>%
+  distinct(donor, organ, Sample, age) %>%
+  group_by(donor) %>%
+  mutate(n_organs = length(unique(organ))) %>%
+  ungroup() %>%
+  filter(n_organs >= 3) %>%
+  pull(donor) %>%
+  unique()
+
+  # arrange(n_organs) %>%
+  # mutate(donor=factor(donor, levels=unique(donor))) %>%
+  # ggplot(aes(donor, organ, color=age)) +
+  # geom_jitter(width=0.01) +
+  # scale_color_viridis_c()
+```
+
+```{r}
+sce <- sce[,sce$donor %in% keep.donors]
 ```
 
 
@@ -348,8 +384,8 @@ Make MOFA object (Use celltypes as grouping covariate)
 mofa <- create_mofa_from_SingleCellExperiment(sce[all_hvgs,], assay = "corrected_logcounts", 
                                               groups = "anno_lvl_2_final_clean", extract_metadata = TRUE)
 
-saveRDS(mofa, glue('{indir}LYMPHOID_mofa_obj_organCorrected.RDS'))
-mofa_obj <- readRDS(glue('{indir}LYMPHOID_mofa_obj_organCorrected.RDS'))
+saveRDS(mofa, glue('{indir}LYMPHOID_mofa_obj_organCorrected_filteredDonors.RDS'))
+mofa_obj <- readRDS(glue('{indir}LYMPHOID_mofa_obj_organCorrected_filteredDonors.RDS'))
 ```
 
 ```{r}
@@ -395,7 +431,7 @@ Wrapped in `run_mofa.R`
 
 
 ```{r}
-outfile <- glue('{indir}{split}_mofa_model_oneview_organCorrected.hdf5')
+outfile <- glue('{indir}{split}_mofa_model_oneview_organCorrected_filteredDonors.hdf5')
 mofa_trained <- run_mofa(object, outfile = outfile)
 ```
 
@@ -1158,6 +1194,47 @@ for (fact in as.character(unique(high_r2_groups_df_filt$factor))){
 
 ---
 ---
+```{r}
+get_factors(mofa_trained, as.data.frame = TRUE) %>%
+  left_join(samples_metadata(mofa_trained)) %>%
+  mutate(sort=ifelse(str_detect(Sample, "CD45P"), "CD45+", ifelse(str_detect(Sample,"CD45N"), "CD45-", ifelse(str_detect(Sample, "TOT"), "TOT", "other")))) %>%
+  filter(organ=="TH" & factor=="Factor2" & group=="CD8AA") %>%
+  ggplot(aes(value,Sample,  color=sort)) +
+  geom_point() +
+  ggtitle("TREG") +
+  xlab("Factor2") 
+```
+
+```{r, fig.height=10, fig.width=7}
+p1 <- get_factors(mofa_trained, as.data.frame = TRUE) %>%
+  left_join(samples_metadata(mofa_trained)) %>%
+  filter(organ=="TH" & factor=="Factor2" & group=="TREG") %>%
+  ggplot(aes(value,Sample,  color=age)) +
+  geom_point() +
+  scale_color_viridis_c() +
+  ggtitle("TREG") +
+  xlab("Factor2") 
+
+p2 <- get_factors(mofa_trained, as.data.frame = TRUE) %>%
+  left_join(samples_metadata(mofa_trained)) %>%
+  filter(organ=="TH" & factor=="Factor2" & group=="TH17") %>%
+  ggplot(aes(value,Sample,  color=age)) +
+  geom_point() +
+  scale_color_viridis_c() +
+  ggtitle("TH17") +
+  xlab("Factor2") 
+
+p3 <- get_factors(mofa_trained, as.data.frame = TRUE) %>%
+  left_join(samples_metadata(mofa_trained)) %>%
+  filter(organ=="TH" & factor=="Factor2" & group=="CD8AA") %>%
+  ggplot(aes(value,Sample,  color=age)) +
+  geom_point() +
+  scale_color_viridis_c() +
+  ggtitle("CD8AA") +
+  xlab("Factor2")
+
+(p1 / p2 /p3) + plot_layout(guides='collect')
+```
 
 
 ### Visualize variance explained by factors

@@ -46,8 +46,8 @@ AnnData components:
 <!-- - raw data: `/lustre/scratch117/cellgen/team205/sharedData/ed6/visium-noimage-hack` (mapped without image with a hack by `ktpolanski`) -->
 - pre-processed anndata objects: `/nfs/team205/ed6/data/Fetal_immune/Visium/*.h5ad` 
 - Splits of scRNA-seq data used for cell2location reference: `/nfs/team205/ed6/data/Fetal_immune/c2l_scRNA_references/`
-    - `PAN.A01.v01.c2l_reference.*`: old annotation
-    - `PAN.A01.v01.c2l_reference.v2.*`: updated annotation, cleaned stromal compartment
+    - `PAN.A01.v01.c2l_reference.*`: cells from all organs, old annotation
+    - `PAN.A01.v01.c2l_reference.v2.*`: cells from Thymus/Liver/Spleen, updated annotation, cleaned stromal compartment
 
 ## Analysis outputs
 

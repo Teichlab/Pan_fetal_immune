@@ -13,7 +13,7 @@ parser.add_argument("--subset_organ", type=str,
 parser.add_argument("--min_age", type=int,
                     default=None)
 parser.add_argument("--split_stroma", type=bool,
-                    default=None)
+                    default=False)
 args = parser.parse_args()
 
 org = args.subset_organ
@@ -22,14 +22,14 @@ split_stroma = args.split_stroma
 
 def make_c2l_reference(
     ref_adata,
-    annotation_obs = 'anno_lvl_2_final_clean',
+    annotation_obs = 'anno_c2l',
     technical_obs = ["method", "donor"], ## Covariates to regress out
     library_obs = ['Sample.lanes'], ## Covariate for 10x library
     subset_organ=None,
     min_age = None,
     exclude_clusters = None, ## Clusters to exclude
     split_by_organ = None, ## for which clusters should the annotation be split by organ? e.g. just stroma
-    min_cells = 10 ## Minimum number of cells to keep a cluster
+    min_cells = 20 ## Minimum number of cells to keep a cluster
     ):
     ## Subset by organ
     if subset_organ:
@@ -60,7 +60,7 @@ def make_c2l_reference(
     return(ref_adata)
 
 def save_c2l_reference(params):
-    outfile = "PAN.A01.v01.c2l_reference."
+    outfile = "PAN.A01.v01.c2l_reference.v2."
     if params["subset_organ"]:
         outfile = outfile + "subset{o}.".format(o=params["subset_organ"])
     if params["split_by_organ"]:
@@ -100,6 +100,24 @@ anno_obs = pd.read_csv(data_dir + "PAN.A01.v01.entire_data_normalised_log.202104
 adata = adata[adata.obs_names.isin(anno_obs.index)].copy()
 adata.obs = anno_obs.loc[adata.obs_names].copy()
 del anno_obs
+
+## Restrict to organs profiled with visium
+adata = adata[adata.obs["organ"].isin(["TH", "SP", "LI"])].copy()
+import gc
+gc.collect()
+
+## Tissue specific annotations
+adata.obs["anno_c2l"] = adata.obs["anno_lvl_2_final_clean"].copy()
+# Thymus
+TH_annotations = pd.read_csv('/home/jovyan/mount/gdrive/Pan_fetal/annotations/original_files/fetal_thymus_anno.csv')
+anno_c2l_th = adata.obs[adata.obs['organ'] == "TH"].copy()
+anno_c2l_th['anno_organ'] = np.nan
+anno_c2l_th.loc[TH_annotations['index'][TH_annotations['index'].isin(anno_c2l_th.index)],'anno_organ'] = TH_annotations[TH_annotations['index'].isin(anno_c2l_th.index)]['Anno_level_5'].values
+
+rename_cells = anno_c2l_th.index[anno_c2l_th['anno_lvl_2_final_clean'] == "KERATINOCYTE"]
+rename_label = anno_c2l_th.anno_organ[anno_c2l_th['anno_lvl_2_final_clean'] == "KERATINOCYTE"].values
+
+adata.obs.loc[rename_cells,"anno_c2l"] = rename_label
 
 ## Save
 

@@ -27,7 +27,11 @@ Split IDs:
 - `MYELOID_LYMPHOID` (myeloid + lymphoid + progenitors)
 - `MEM_PROGENITORS` (erythroid + MK cells + progenitors)
 - `MYELOID` (myeloid + progenitors)
+- `MYELOID_V2` (myeloid + progenitors + pDC cells)
 - `LYMPHOID` (lymphoid + progenitors)
+- `NKT` (NK / T cells)
+- `SPLEEN_STROMA` (non-immune cells from stroma)
+- `HSC_PROGENITORS` (progenitors + closest cell type for each lineage)
 
 Working anndata (log-norm expression + scVI embeddings + old annotations): `/nfs/team205/ed6/data/Fetal_immune/PAN.A01.v01.entire_data_normalised_log.{timestamp}.{splitID}.embedding.h5ad` 
  
@@ -39,8 +43,11 @@ AnnData components:
 
 ## Spatial data
 
-- raw data: `/lustre/scratch117/cellgen/team205/sharedData/ed6/visium-noimage-hack` (mapped without image with a hack by `ktpolanski`)
+<!-- - raw data: `/lustre/scratch117/cellgen/team205/sharedData/ed6/visium-noimage-hack` (mapped without image with a hack by `ktpolanski`) -->
 - pre-processed anndata objects: `/nfs/team205/ed6/data/Fetal_immune/Visium/*.h5ad` 
+- Splits of scRNA-seq data used for cell2location reference: `/nfs/team205/ed6/data/Fetal_immune/c2l_scRNA_references/`
+    - `PAN.A01.v01.c2l_reference.*`: cells from all organs, old annotation
+    - `PAN.A01.v01.c2l_reference.v2.*`: cells from Thymus/Liver/Spleen, updated annotation, cleaned stromal compartment
 
 ## Analysis outputs
 

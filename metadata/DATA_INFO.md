@@ -62,3 +62,14 @@ AnnData components:
 - AnnData objects with Milo specific components (as generated with `emdann/milopy` package) `/nfs/team205/ed6/data/Fetal_immune/milo_outs/{split_ID}/adata4milo.{split_ID}.csv`. This includes:
     - `adata.obsm["nhoods"]` a binary matrix matching cells (rows) to neighbourhoods (columns)
     - `adata.uns['nhood_adata']` an AnnData object that is used for differential abundance testing. Hhere `obs` are neighbourhoods, `vars` are samples and `adata.X` are counts of cells from each sample in each neighbourhood. This object is also separately saved in `/nfs/team205/ed6/data/Fetal_immune/milo_outs/{split_ID}/milo_nhood_adata.{split_ID}.h5ad`
+
+### Differential expression analysis across organs
+Dataframes of log-fold changes and adjusted p-values `/nfs/team205/ed6/data/Fetal_immune/LMM_data/DE_input_HSC_IMMUNE_PBULK/DE_results_*.csv`. Important columns:
+
+- name: gene name
+- pval: p-value _before_ FDR correction
+- adj_pval: multiple testing corrected p-values (with BH)
+- lfc: estimated log-fold change in expression
+- test_celltype: the cell type in which organ specific differences were tested 
+- lfc_ctrl: estimated log-fold change in expression when testing in "control celltypes" 
+- filter_signif: boolean indicating if the gene should be followed up on as significant in test celltype (`adj_pval < 0.1`, `abs(lfc) > 2`) and not changing in control celltypes (`abs(lfc_ctrl) < 2`)

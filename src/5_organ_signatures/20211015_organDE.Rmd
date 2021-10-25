@@ -17,7 +17,7 @@ library(scater)
 ## Load pseudobulked data
 
 ```{r}
-split = "LYMPHOID"
+split = "HSC_IMMUNE"
 indir <- glue("/nfs/team205/ed6/data/Fetal_immune/LMM_data/DE_input_{split}_PBULK/")
 
 matrix <- readMM(file = paste0(indir, "matrix.mtx.gz"))
@@ -31,24 +31,24 @@ rownames(sce) <- make.unique(rowdata$GeneName)
 sce <- logNormCounts(sce)
 ```
 
-Load erythroid data for control
+<!-- Load erythroid data for control -->
 
-```{r}
-ctrl_split = "MEM_PROGENITORS"
-indir <- glue("/nfs/team205/ed6/data/Fetal_immune/LMM_data/DE_input_{ctrl_split}_PBULK/")
+<!-- ```{r} -->
+<!-- ctrl_split = "MEM_PROGENITORS" -->
+<!-- indir <- glue("/nfs/team205/ed6/data/Fetal_immune/LMM_data/DE_input_{ctrl_split}_PBULK/") -->
 
-matrix <- readMM(file = paste0(indir, "matrix.mtx.gz"))
-coldata <- read.csv(file = paste0(indir, "metadata.csv.gz"))  %>%
-  column_to_rownames("X")
-rowdata <- read.csv(file = paste0(indir, "gene.csv.gz")) 
+<!-- matrix <- readMM(file = paste0(indir, "matrix.mtx.gz")) -->
+<!-- coldata <- read.csv(file = paste0(indir, "metadata.csv.gz"))  %>% -->
+<!--   column_to_rownames("X") -->
+<!-- rowdata <- read.csv(file = paste0(indir, "gene.csv.gz"))  -->
 
-## Make SingleCellExperiment obj
-ctrl_sce <- SingleCellExperiment(list(counts = t(matrix)), colData = coldata)
-rownames(ctrl_sce) <- make.unique(rowdata$GeneName) 
-ctrl_sce <- logNormCounts(ctrl_sce)
-```
+<!-- ## Make SingleCellExperiment obj -->
+<!-- ctrl_sce <- SingleCellExperiment(list(counts = t(matrix)), colData = coldata) -->
+<!-- rownames(ctrl_sce) <- make.unique(rowdata$GeneName)  -->
+<!-- ctrl_sce <- logNormCounts(ctrl_sce) -->
+<!-- ``` -->
 
-```{r, fig.width=15, fig.height=10}
+```{r, fig.width=20, fig.height=10}
 ## Plot number of cells per organ/celltype pair
 n_cells_heatmap <- data.frame(colData(sce)) %>%
   group_by(anno_lvl_2_final_clean, organ) %>%
@@ -74,112 +74,259 @@ n_samples_heatmap <- data.frame(colData(sce)) %>%
 
 n_cells_heatmap / n_samples_heatmap
 ```
-```{r, fig.width=15, fig.height=10}
-## Plot number of cells per organ/celltype pair
-n_cells_heatmap <- data.frame(colData(ctrl_sce)) %>%
-  group_by(anno_lvl_2_final_clean, organ) %>%
-  summarise(n_cells=sum(n_cells)) %>%
-  ggplot(aes(anno_lvl_2_final_clean, organ)) +
-  geom_tile(aes(fill=log10(n_cells))) +
-  geom_text(aes(label=n_cells), color="white") +
-  scale_fill_viridis_c() +
-  theme_classic(base_size = 16) +
-  xlab("celltype") +
-  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.x = element_blank())
-
-n_samples_heatmap <- data.frame(colData(ctrl_sce)) %>%
-  group_by(anno_lvl_2_final_clean, organ) %>%
-  summarise(n_samples=n()) %>%
-  ggplot(aes(anno_lvl_2_final_clean, organ)) +
-  geom_tile(aes(fill=n_samples)) +
-  geom_text(aes(label=n_samples), color="white") +
-  scale_fill_viridis_c(option="cividis") +
-  theme_classic(base_size = 16) +
-  xlab("celltype") +
-  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0.5))
-
-n_cells_heatmap / n_samples_heatmap
-```
-
-## B cell progenitors - DE between liver and bone marrow
-
-### Prepare dataset
 
 ```{r}
-## Subset to Liver and Bone Marrow B cells
-cts <- c('MATURE_B',"IMMATURE_B", "PRO_B", "PRE_PRO_B", "LATE_PRO_B", "SMALL_PRE_B", "LARGE_PRE_B", "CYCLING_B", "CD4+T", "CD8+T")
-organs <- c("LI", "BM", "SP")
-subset_sce <- sce[,sce$anno_lvl_2_final_clean %in% cts]
-subset_sce <- subset_sce[,subset_sce$organ %in% organs]
-
-## Feature selection w scran (just on test cts)
-dec <- modelGeneVar(subset_sce)
-hvgs <- getTopHVGs(dec, n = 7500)
-subset_sce <- subset_sce[hvgs,]
-
-ctrl_cts <- c("EARLY_ERY", "MID_ERY", "LATE_ERY")
-subset_ctrl_sce <- ctrl_sce[,ctrl_sce$anno_lvl_2_final_clean %in% ctrl_cts]
-subset_ctrl_sce <- subset_ctrl_sce[,subset_ctrl_sce$organ %in% organs]
-subset_ctrl_sce <- subset_ctrl_sce[hvgs,]
-subset_sce <- cbind(subset_sce, subset_ctrl_sce)
-
-## Remove empty genes
-non_empty_rows <- which(rowSums2(assay(subset_sce)) > 0)
-subset_sce <- subset_sce[non_empty_rows,]
-
-## Keep donors with paired organs in all the annotations
-keep_donors <- 
-  data.frame(colData(subset_sce)) %>%
-  group_by(donor, anno_lvl_2_final_clean) %>%
-  summarise(n_organs = length(unique(organ))) %>%
-  filter(n_organs == length(organs) ) %>%
-  # group_by(donor) %>%
-  # summarise(n_anno=length(unique(anno_lvl_2_final_clean))) %>%
-  # filter(n_anno == length(cts)) %>%
-  pull(donor)
-
-subset_sce <- subset_sce[,subset_sce$donor %in% keep_donors]
-
-# Convert counts to dense matrix
-counts(subset_sce) <- as.matrix(counts(subset_sce))
-
+## Exclude low quality clusters
+library(jsonlite)
+anno_groups <- fromJSON(paste(readLines('../../metadata/anno_groups.json'), collapse=""))
+sce <- sce[,!sce$anno_lvl_2_final_clean %in% anno_groups$OTHER]
 ```
+```{r}
+sce
+```
+## Helper functions
 
-### Test for DE
+```{r}
+## Prepare dataset subset for DE analysis
+de_prep_data <- function(sce,
+                        cts, ## Which celltypes to test 
+                         organ_test, ## Which organ to test
+                         organ_ctrl=NULL, ## Which organ to compare to (if NULL compare organ VS rest)
+                         organ_ref=NULL, ## Which organ to use as reference
+                         n_hvgs = 7500
+  ){
+    if ( is.null(organ_ctrl) ){
+      organs <- c(organ_test, "other")
+      sce$organ <- ifelse(sce$organ == organ_test, organ_test, 'other')
+    } else {
+      organs <- c(organ_test, organ_ctrl, organ_ref)
+    }
+  
+    subset_sce <- sce[,sce$anno_lvl_2_final_clean %in% cts]
+    subset_sce <- subset_sce[,subset_sce$organ %in% organs]
+    
+    ## Feature selection w scran (just on test cts)
+    dec <- modelGeneVar(subset_sce)
+    hvgs <- getTopHVGs(dec, n = n_hvgs)
+    subset_sce <- subset_sce[hvgs,]
+    
+    ## Keep donors with paired organs in all the annotations
+    keep_donors <- 
+      data.frame(colData(subset_sce)) %>%
+      group_by(donor, anno_lvl_2_final_clean) %>%
+      summarise(n_organs = length(unique(organ))) %>%
+      filter(n_organs == length(organs) ) %>%
+      pull(donor) %>% unique()
+    
+    subset_sce <- subset_sce[,subset_sce$donor %in% keep_donors]
 
-```{r, fig.width=10, fig.height=10}
-test_de_ct <- function(ct, de_res_ctrl, my_design, alpha_lev = 0.1){
+    ## Find control celltypes
+    matched_donor_df <- data.frame(colData(sce[,sce$donor %in% keep_donors]))
+    # if ( is.null(organ_ctrl) ){ matched_donor_df$organ <- ifelse(matched_donor_df$organ == organ_test, organ_test, 'other') }
+    ctrl_cts <- matched_donor_df %>%
+      filter(organ %in% organs & (!anno_lvl_2_final_clean %in% cts)) %>%
+      group_by(anno_lvl_2_final_clean, organ) %>%
+      summarise(n=n(), n_cells=sum(n_cells)) %>%
+      group_by(anno_lvl_2_final_clean) %>%
+      filter(all(n > 2) & all(n_cells > 100)) %>%
+      summarise(n_organs=n(), mean_n_cells = mean(n_cells), mean_n=mean(n)) %>%
+      filter(n_organs == length(organs)) %>%
+      arrange(-mean_n_cells) %>%
+      # filter(!anno_lvl_2_final_clean %in% anno_groups$`NK/T CELLS`) %>% ## Exclude other T cell subtypes
+      pull(anno_lvl_2_final_clean) %>% unique()
+    
+    subset_ctrl_sce <- sce[,sce$anno_lvl_2_final_clean %in% ctrl_cts[1:3]]
+    # if ( is.null(organ_ctrl) ){ subset_ctrl_sce$organ <- ifelse(subset_ctrl_sce$organ == organ_test, organ_test, 'other') }
+    subset_ctrl_sce <- subset_ctrl_sce[,subset_ctrl_sce$organ %in% organs]
+    subset_ctrl_sce <- subset_ctrl_sce[hvgs,]
+    subset_sce <- cbind(subset_sce, subset_ctrl_sce)
+  
+    ## Mark control celltypes
+    subset_sce$is_ctrl_ct <- subset_sce$anno_lvl_2_final_clean %in% ctrl_cts[1:3]
+    
+    # Convert counts to dense matrix
+    counts(subset_sce) <- as.matrix(counts(subset_sce))
+    return(subset_sce)
+}
+
+## DE testing in celltype of interest
+test_de_ct <- function(subset_sce, ct, my_design, my_contrast, organ_ref = 'other',alpha_lev = 0.1, max_lfc = 20){
   subset_sce$test_anno <- subset_sce$anno_lvl_2_final_clean == ct
   ## Check gene expression in tested celltype
   non_empty_rows <- which(rowSums2(counts(subset_sce[,subset_sce$test_anno])) > 0)
   ct_subset_sce <- subset_sce[non_empty_rows,]
   ## Fit
-  fit <- glm_gp(ct_subset_sce, design = my_design, reference_level = c('SP'))
-  de_res_1 <- test_de(fit, contrast = (`organLI` + `organLI:test_annoTRUE`) - (`organBM` + `organBM:test_annoTRUE`))
-  de_res_1$lfc <- ifelse(abs(de_res_1$lfc) > 20, sign(de_res_1$lfc) * Inf, de_res_1$lfc)
+  fit <- glm_gp(ct_subset_sce, design = my_design, reference_level = organ_ref)
+  de_res_1 <- test_de(fit, contrast = eval(parse(text=my_contrast)))
+  de_res_1$lfc <- ifelse(abs(de_res_1$lfc) > max_lfc, sign(de_res_1$lfc) * Inf, de_res_1$lfc)
   
-  # de_res_1[,"lfc_ctrl"] <- de_res_ctrl$lfc
-  # de_res_1[,"adj_pval_ctrl"] <- de_res_ctrl$adj_pval
-  # de_res_1 <- mutate(de_res_1, signif=ifelse(adj_pval < alpha_lev & adj_pval_ctrl > alpha_lev, TRUE, FALSE)) 
   de_res_1[,'test_celltype'] <- ct
   return(de_res_1)
 }
 
-## Control (just btw organs)
-my_design = ~ method + donor + organ + test_anno:organ + 1
-subset_sce$test_anno <- subset_sce$anno_lvl_2_final_clean %in% c("LATE_ERY")
-## Check gene expression in tested celltype
-non_empty_rows <- which(rowSums2(counts(subset_sce[,subset_sce$test_anno])) > 0)
-ct_subset_sce <- subset_sce[non_empty_rows,]
-## Fit
-fit <- glm_gp(ct_subset_sce, design = my_design, reference_level = c('SP'))
-de_res_ctrl <- test_de(fit, contrast = (`organLI` + `organLI:test_annoTRUE`) - (`organBM` + `organBM:test_annoTRUE`))
-de_res_ctrl$lfc <- ifelse(abs(de_res_ctrl$lfc) > 20, sign(de_res_ctrl$lfc) * Inf, de_res_ctrl$lfc)
+## DE testing in control celltypes (to account for background expression)
+test_de_ctrl_ct <- function(subset_sce, my_design, my_contrast, organ_ref = 'other',alpha_lev = 0.1, max_lfc = 20){
+  subset_sce$test_anno <- subset_sce$anno_lvl_2_final_clean %in% unique(subset_sce$anno_lvl_2_final_clean[subset_sce$is_ctrl_ct])
+  ## Check gene expression in tested celltype
+  non_empty_rows <- which(rowSums2(counts(subset_sce[,subset_sce$test_anno])) > 0)
+  ct_subset_sce <- subset_sce[non_empty_rows,]
+  
+  ## Fit
+  fit <- glm_gp(ct_subset_sce, design = my_design, reference_level = organ_ref)
+  de_res_ctrl <- test_de(fit, contrast = eval(parse(text=my_contrast)))
+  de_res_ctrl$lfc <- ifelse(abs(de_res_ctrl$lfc) > 10, sign(de_res_ctrl$lfc) * Inf, de_res_ctrl$lfc)
+  return(de_res_ctrl) 
+  }
 
-test_cts <- c("PRE_PRO_B", 'PRO_B', "LATE_PRO_B", "LARGE_PRE_B")
-de_res_ls <- lapply(test_cts, function(ct) test_de_ct(ct, de_res_ctrl, my_design))
-de_res_ls <- setNames(de_res_ls, test_cts)
+## Save annotation of significant genes to follow up on
+mark_significant <- function(de_res, de_res_ctrl, lfc_thresh=3, alpha_thresh=0.1){
+  de_res_ctrl <- as.data.frame(de_res_ctrl)
+  rownames(de_res_ctrl) <- de_res_ctrl$name
+  de_res$lfc_ctrl <- de_res_ctrl[de_res$name,'lfc']
+  mark_signif <- 
+    (de_res$adj_pval < alpha_thresh) &
+    (abs(de_res$lfc_ctrl) < lfc_thresh) &
+    (abs(de_res$lfc) >= lfc_thresh) 
+  de_res$filter_signif <- mark_signif
+  return(de_res)
+  }
+
+
 ```
+
+## B cell progenitors - DE between liver and bone marrow
+
+```{r}
+## Prep data subset for testing
+organ_test <- "BM"
+organ_ctrl <- "LI"
+subset_sce <- de_prep_data(sce, cts = c('MATURE_B',"IMMATURE_B", "PRO_B", "PRE_PRO_B", "LATE_PRO_B", "SMALL_PRE_B", "LARGE_PRE_B", "CYCLING_B", "CD4+T", "CD8+T"),
+                           organ_test = organ_test, organ_ctrl = organ_ctrl, organ_ref = 'SP', n_hvgs = 7500
+                           )
+
+my_design = ~ donor + organ + test_anno:organ + 1
+my_contrast <- "(`organLI` + `organLI:test_annoTRUE`) - (`organBM` + `organBM:test_annoTRUE`)"
+
+## Test in control celltypes
+de_res_ctrl <- test_de_ctrl_ct(subset_sce, my_design, my_contrast, organ_ref = "SP")
+
+## Test in celltypes of interest
+test_cts <- c("PRE_PRO_B", 'PRO_B', "LATE_PRO_B", "LARGE_PRE_B")
+de_res_ls <- lapply(test_cts, function(ct) test_de_ct(subset_sce, ct, my_design, my_contrast, organ_ref = "SP") )
+de_res_ls <- setNames(de_res_ls, test_cts)
+
+de_res_ls <- lapply(de_res_ls, function(de_res) mark_significant(de_res, 
+                                                                 de_res_ctrl,
+                                                                 lfc_thresh=2, 
+                                                                 alpha_thresh=0.1)
+                    )
+
+de_res_ctrl$test_celltype <- "CTRL"
+de_res_ls[['CTRL']] <- de_res_ctrl
+
+## Save output
+if (is.null(organ_ctrl)){ 
+  organ_vs <- "rest"
+  } else {
+ organ_vs <- organ_ctrl
+  }
+cts_string <- paste(test_cts, collapse = '-')
+ctrl_string <- paste(unique(subset_sce$anno_lvl_2_final_clean[subset_sce$is_ctrl_ct]), collapse = '-')
+outfile_name <- glue('DE_results_{organ_test}_vs_{organ_vs}_TEST_{cts_string}_CTRL_{ctrl_string}.csv')
+de_res_ls %>%
+  purrr::reduce(bind_rows) %>%
+  write_csv(paste0(indir, outfile_name))
+```
+
+<!-- ```{r} -->
+<!-- ## Subset to Liver and Bone Marrow B cells -->
+<!-- cts <- c('MATURE_B',"IMMATURE_B", "PRO_B", "PRE_PRO_B", "LATE_PRO_B", "SMALL_PRE_B", "LARGE_PRE_B", "CYCLING_B", "CD4+T", "CD8+T") -->
+<!-- organs <- c("LI", "BM", "SP") -->
+<!-- subset_sce <- sce[,sce$anno_lvl_2_final_clean %in% cts] -->
+<!-- subset_sce <- subset_sce[,subset_sce$organ %in% organs] -->
+
+<!-- ## Feature selection w scran (just on test cts) -->
+<!-- dec <- modelGeneVar(subset_sce) -->
+<!-- hvgs <- getTopHVGs(dec, n = 7500) -->
+<!-- subset_sce <- subset_sce[hvgs,] -->
+
+<!-- # ctrl_cts <- c("EARLY_ERY", "MID_ERY", "LATE_ERY") -->
+<!-- # subset_ctrl_sce <- ctrl_sce[,ctrl_sce$anno_lvl_2_final_clean %in% ctrl_cts] -->
+<!-- # subset_ctrl_sce <- subset_ctrl_sce[,subset_ctrl_sce$organ %in% organs] -->
+<!-- # subset_ctrl_sce <- subset_ctrl_sce[hvgs,] -->
+<!-- # subset_sce <- cbind(subset_sce, subset_ctrl_sce) -->
+
+<!-- ## Remove empty genes -->
+<!-- non_empty_rows <- which(rowSums2(assay(subset_sce)) > 0) -->
+<!-- subset_sce <- subset_sce[non_empty_rows,] -->
+
+<!-- ## Keep donors with paired organs in all the annotations -->
+<!-- keep_donors <-  -->
+<!--   data.frame(colData(subset_sce)) %>% -->
+<!--   group_by(donor, anno_lvl_2_final_clean) %>% -->
+<!--   summarise(n_organs = length(unique(organ))) %>% -->
+<!--   filter(n_organs == length(organs) ) %>% -->
+<!--   pull(donor) %>% unique() -->
+
+<!-- subset_sce <- subset_sce[,subset_sce$donor %in% keep_donors] -->
+
+<!-- ## Find control celltypes -->
+<!-- matched_donor_df <- data.frame(colData(sce[,sce$donor %in% keep_donors])) -->
+<!-- ctrl_cts <- matched_donor_df %>% -->
+<!--   filter(organ %in% organs & (!anno_lvl_2_final_clean %in% cts)) %>% -->
+<!--   group_by(anno_lvl_2_final_clean, organ) %>% -->
+<!--   summarise(n=n(), n_cells=sum(n_cells)) %>% -->
+<!--   group_by(anno_lvl_2_final_clean) %>% -->
+<!--   filter(all(n > 2) & all(n_cells > 100)) %>% -->
+<!--   summarise(mean_n_cells = mean(n_cells), mean_n=mean(n)) %>% -->
+<!--   arrange(-mean_n_cells) %>% -->
+<!--   pull(anno_lvl_2_final_clean) %>% unique() -->
+
+<!-- subset_ctrl_sce <- sce[,sce$anno_lvl_2_final_clean %in% ctrl_cts[1:3]] -->
+<!-- subset_ctrl_sce <- subset_ctrl_sce[,subset_ctrl_sce$organ %in% organs] -->
+<!-- subset_ctrl_sce <- subset_ctrl_sce[hvgs,] -->
+<!-- subset_sce <- cbind(subset_sce, subset_ctrl_sce) -->
+
+<!-- # Convert counts to dense matrix -->
+<!-- counts(subset_sce) <- as.matrix(counts(subset_sce)) -->
+
+<!-- ``` -->
+
+<!-- ### Test for DE -->
+
+<!-- ```{r, fig.width=10, fig.height=10} -->
+<!-- test_de_ct <- function(ct, de_res_ctrl, my_design, alpha_lev = 0.1){ -->
+<!--   subset_sce$test_anno <- subset_sce$anno_lvl_2_final_clean == ct -->
+<!--   ## Check gene expression in tested celltype -->
+<!--   non_empty_rows <- which(rowSums2(counts(subset_sce[,subset_sce$test_anno])) > 0) -->
+<!--   ct_subset_sce <- subset_sce[non_empty_rows,] -->
+<!--   ## Fit -->
+<!--   fit <- glm_gp(ct_subset_sce, design = my_design, reference_level = c('SP')) -->
+<!--   de_res_1 <- test_de(fit, contrast = (`organLI` + `organLI:test_annoTRUE`) - (`organBM` + `organBM:test_annoTRUE`)) -->
+<!--   de_res_1$lfc <- ifelse(abs(de_res_1$lfc) > 20, sign(de_res_1$lfc) * Inf, de_res_1$lfc) -->
+
+<!--   # de_res_1[,"lfc_ctrl"] <- de_res_ctrl$lfc -->
+<!--   # de_res_1[,"adj_pval_ctrl"] <- de_res_ctrl$adj_pval -->
+<!--   # de_res_1 <- mutate(de_res_1, signif=ifelse(adj_pval < alpha_lev & adj_pval_ctrl > alpha_lev, TRUE, FALSE))  -->
+<!--   de_res_1[,'test_celltype'] <- ct -->
+<!--   return(de_res_1) -->
+<!-- } -->
+
+<!-- ## Control (just btw organs) -->
+<!-- my_design = ~ method + donor + organ + test_anno:organ + 1 -->
+<!-- subset_sce$test_anno <- subset_sce$anno_lvl_2_final_clean %in% ctrl_cts[1:3] -->
+<!-- ## Check gene expression in tested celltype -->
+<!-- non_empty_rows <- which(rowSums2(counts(subset_sce[,subset_sce$test_anno])) > 0) -->
+<!-- ct_subset_sce <- subset_sce[non_empty_rows,] -->
+<!-- ## Fit -->
+<!-- fit <- glm_gp(ct_subset_sce, design = my_design, reference_level = c('SP')) -->
+<!-- de_res_ctrl <- test_de(fit, contrast = (`organLI` + `organLI:test_annoTRUE`) - (`organBM` + `organBM:test_annoTRUE`)) -->
+<!-- de_res_ctrl$lfc <- ifelse(abs(de_res_ctrl$lfc) > 20, sign(de_res_ctrl$lfc) * Inf, de_res_ctrl$lfc) -->
+
+<!-- test_cts <- c("PRE_PRO_B", 'PRO_B', "LATE_PRO_B", "LARGE_PRE_B") -->
+<!-- de_res_ls <- lapply(test_cts, function(ct) test_de_ct(ct, de_res_ctrl, my_design)) -->
+<!-- de_res_ls <- setNames(de_res_ls, test_cts) -->
+<!-- ``` -->
 
 
 ### Explore results
@@ -271,7 +418,7 @@ de_res_ls %>%
 ### Prepare dataset
 
 ```{r}
-## Subset to Liver and Bone Marrow B cells
+## Subset to conventional T cells
 cts <- c("CD4+T", "CD8+T", "TREG")
 subset_sce <- sce[,sce$anno_lvl_2_final_clean %in% cts]
 
@@ -280,35 +427,41 @@ dec <- modelGeneVar(subset_sce)
 hvgs <- getTopHVGs(dec, n = 7500)
 subset_sce <- subset_sce[hvgs,]
 
-ctrl_cts <- c('MATURE_B',"IMMATURE_B")
-subset_ctrl_sce <- sce[,sce$anno_lvl_2_final_clean %in% ctrl_cts]
-subset_ctrl_sce <- subset_ctrl_sce[hvgs,]
-subset_sce <- cbind(subset_sce, subset_ctrl_sce)
-
 subset_sce$organ <- ifelse(subset_sce$organ == 'TH', 'TH', 'other')
 organs <- unique(subset_sce$organ)
-
-## Remove empty genes
-non_empty_rows <- which(rowSums2(assay(subset_sce)) > 0)
-subset_sce <- subset_sce[non_empty_rows,]
 
 ## Keep donors with paired organs in all the annotations
 keep_donors <- 
   data.frame(colData(subset_sce)) %>%
   group_by(donor, anno_lvl_2_final_clean) %>%
   summarise(n_organs = length(unique(organ))) %>%
-  group_by(donor) %>%
-  mutate(all(n_organs == length(organs) )) %>%
-  # group_by(donor) %>%
-  # summarise(n_anno=length(unique(anno_lvl_2_final_clean))) %>%
-  # filter(n_anno == length(cts)) %>%
-  pull(donor)
+  filter(n_organs == length(organs) ) %>%
+  pull(donor) %>% unique()
 
 subset_sce <- subset_sce[,subset_sce$donor %in% keep_donors]
 
+## Find control celltypes
+matched_donor_df <- data.frame(colData(sce[,sce$donor %in% keep_donors]))
+matched_donor_df$organ <- ifelse(matched_donor_df$organ == 'TH', 'TH', 'other')
+ctrl_cts <- matched_donor_df %>%
+  filter(organ %in% organs & (!anno_lvl_2_final_clean %in% cts)) %>%
+  group_by(anno_lvl_2_final_clean, organ) %>%
+  summarise(n=n(), n_cells=sum(n_cells)) %>%
+  group_by(anno_lvl_2_final_clean) %>%
+  filter(all(n > 2) & all(n_cells > 100)) %>%
+  summarise(mean_n_cells = mean(n_cells), mean_n=mean(n)) %>%
+  arrange(-mean_n_cells) %>%
+  filter(!anno_lvl_2_final_clean %in% anno_groups$`NK/T CELLS`) %>% ## Exclude other T cell subtypes
+  pull(anno_lvl_2_final_clean) %>% unique()
+
+subset_ctrl_sce <- sce[,sce$anno_lvl_2_final_clean %in% ctrl_cts[1:3]]
+subset_ctrl_sce$organ <- ifelse(subset_ctrl_sce$organ == 'TH', 'TH', 'other')
+subset_ctrl_sce <- subset_ctrl_sce[,subset_ctrl_sce$organ %in% organs]
+subset_ctrl_sce <- subset_ctrl_sce[hvgs,]
+subset_sce <- cbind(subset_sce, subset_ctrl_sce)
+
 # Convert counts to dense matrix
 counts(subset_sce) <- as.matrix(counts(subset_sce))
-
 ```
 
 ### Test for DE
@@ -333,7 +486,7 @@ test_de_ct <- function(ct, de_res_ctrl, my_design, alpha_lev = 0.1){
 
 ## Control (just btw organs)
 my_design = ~ donor + organ + test_anno:organ + 1
-subset_sce$test_anno <- subset_sce$anno_lvl_2_final_clean %in% c("MATURE_B")
+subset_sce$test_anno <- subset_sce$anno_lvl_2_final_clean %in% ctrl_cts
 ## Check gene expression in tested celltype
 non_empty_rows <- which(rowSums2(counts(subset_sce[,subset_sce$test_anno])) > 0)
 ct_subset_sce <- subset_sce[non_empty_rows,]
@@ -341,7 +494,7 @@ ct_subset_sce <- subset_sce[non_empty_rows,]
 ## Fit
 fit <- glm_gp(ct_subset_sce, design = my_design, reference_level = c('other'))
 de_res_ctrl <- test_de(fit, contrast = (`organTH` + `organTH:test_annoTRUE`))
-de_res_ctrl$lfc <- ifelse(abs(de_res_ctrl$lfc) > 20, sign(de_res_ctrl$lfc) * Inf, de_res_ctrl$lfc)
+de_res_ctrl$lfc <- ifelse(abs(de_res_ctrl$lfc) > 10, sign(de_res_ctrl$lfc) * Inf, de_res_ctrl$lfc)
 
 test_cts <- c("CD4+T", "CD8+T", "TREG")
 de_res_ls <- lapply(test_cts, function(ct) test_de_ct(ct, de_res_ctrl, my_design))
@@ -368,40 +521,282 @@ corrplot::corrplot(cor(lfc_mat, method="spearman"), tl.col = 'black')
 ```
 ```{r, fig.height=6, fig.width=8}
 de_res_ls[['CTRL']] <- de_res_ctrl
-deg_ls <- lapply(de_res_ls, function(x) x %>% filter(adj_pval < 0.1) %>% pull(name)) 
+deg_ls <- lapply(de_res_ls, function(x) x %>% filter(adj_pval < 0.01) %>% pull(name)) 
 upset(fromList(deg_ls), order.by = c("freq"),
       sets.x.label = "# DEGs")
 ```
 
-```{r, fig.height=12, fig.width=18}
-plot_lfc_vs_ctrl <- function(de_res, min_lfc = 5, min_log10_pval = 5){
+```{r, fig.height=8, fig.width=20}
+plot_lfc_vs_ctrl <- function(de_res, min_lfc = 5, min_log10_pval = 5, alpha_lev=0.01){
   ct <- de_res$test_celltype[1]
   de_res %>%
-  mutate(signif = (adj_pval < 0.1)) %>%
+  mutate(signif = (adj_pval < alpha_lev)) %>%
   ggplot(aes(lfc_ctrl, lfc)) +
   geom_vline(xintercept = 0, linetype=2) + geom_hline(yintercept = 0, linetype=2) +
   geom_point(color="black", size=0.2) +
   geom_point(data = . %>% filter(signif), color='red', size=0.7) +
-  geom_text(data = . %>% filter(signif & abs(lfc) > min_lfc & -log10(adj_pval) > min_log10_pval), 
+  ggrepel::geom_text_repel(data = . %>% filter(signif & abs(lfc) > min_lfc & -log10(adj_pval) > min_log10_pval), 
                              aes(label=name),
-                             max.overlaps=20) +
+                             max.overlaps=20, color='red') +
     ggtitle(ct) +
     theme_bw(base_size=18) +
-    xlab("logFC CTRL") + ylab(glue("logFC ({ct} BM vs {ct} LI)"))
+    xlab("logFC CTRL") + ylab(glue("logFC ({ct} TH vs {ct} rest)"))
 }
 
-for (i in 1:4){
+for (i in 1:3){
   d <- de_res_ls[[i]]
   d$lfc_ctrl <- column_to_rownames(de_res_ctrl, "name")[d$name,'lfc']  
   d$adj_pval_ctrl <- column_to_rownames(de_res_ctrl, "name")[d$name,'adj_pval']  
   de_res_ls[[i]] <- d
 }
 
-pl_ls <- lapply(de_res_ls[1:3], function(df) plot_lfc_vs_ctrl(df,min_lfc = 5, min_log10_pval = 5))
-pl_ls[[1]]
+pl_ls <- lapply(de_res_ls[1:3], function(df) plot_lfc_vs_ctrl(df,min_lfc = 3, min_log10_pval = 5))
 wrap_plots(pl_ls, ncol = 3)
-plot_lfc_vs_ctrl(de_res_ls[[1]])
 
+```
+
+### Save results
+```{r}
+de_res_ls[1:3] %>%
+  purrr::reduce(bind_rows) %>%
+  bind_rows(de_res_ctrl %>% mutate(test_celltype='control')) %>%
+  write_csv(paste0(indir, 'DE_results_THtcells_THvsOther_ctrl.csv'))
+```
+
+```{r}
+
+de_res_df <- read_csv(paste0(indir, 'DE_results_THtcells_THvsOther_ctrl.csv'))
+de_res_ls <- split(de_res_df, de_res_df$test_celltype)
+de_res_ctrl <- de_res_ls[['control']]
+de_res_ls[['control']] <- NULL
+
+organ_test <- "TH"
+cts <- names(de_res_ls)
+organ_ctrl <- NULL
+ctrl_cts <- c("MACROPHAGE_II","MID_ERY","LARGE_PRE_B" )
+
+de_res_ls <- lapply(de_res_ls, function(de_res) mark_significant(de_res, 
+                                                                 de_res_ctrl,
+                                                                 lfc_thresh=2, 
+                                                                 alpha_thresh=0.1)
+                    )
+
+de_res_ctrl$test_celltype <- "CTRL"
+de_res_ls[['CTRL']] <- de_res_ctrl
+
+## Save output
+if (is.null(organ_ctrl)){ 
+  organ_vs <- "rest"
+  } else {
+ organ_vs <- organ_ctrl
+  }
+cts_string <- paste(test_cts, collapse = '-')
+ctrl_string <- paste(ctrl_cts, collapse = '-')
+outfile_name <- glue('DE_results_{organ_test}_vs_{organ_vs}_TEST_{cts_string}_CTRL_{ctrl_string}.csv')
+de_res_ls %>%
+  purrr::reduce(bind_rows) %>%
+  write_csv(paste0(indir, outfile_name))
+
+```
+
+
+
+### CCR2hi Monocytes in bone marrow
+
+```{r}
+## Prep data subset for testing
+organ_test <- "BM"
+organ_ctrl <- NULL
+subset_sce <- de_prep_data(sce, cts = c("MONOCYTE_II_IL1B", "MONOCYTE_III_CCR2", "MONOCYTE_I_CXCR4"),
+                           organ_test = organ_test, organ_ctrl = organ_ctrl, organ_ref = NULL, n_hvgs = 7500
+                           )
+
+my_design = ~ donor + organ + test_anno:organ + 1
+my_contrast <- "`organBM` + `organBM:test_annoTRUE`"
+
+## Test in control celltypes
+de_res_ctrl <- test_de_ctrl_ct(subset_sce, my_design, my_contrast)
+
+## Test in celltypes of interest
+test_cts <- c("MONOCYTE_III_CCR2")
+de_res_ls <- lapply(test_cts, function(ct) test_de_ct(subset_sce, ct, my_design, my_contrast) )
+de_res_ls <- setNames(de_res_ls, test_cts)
+
+de_res_ls <- lapply(de_res_ls, function(de_res) mark_significant(de_res, 
+                                                                 de_res_ctrl,
+                                                                 lfc_thresh=2, 
+                                                                 alpha_thresh=0.1)
+                    )
+
+de_res_ctrl$test_celltype <- "CTRL"
+de_res_ls[['CTRL']] <- de_res_ctrl
+
+## Save output
+if (is.null(organ_ctrl)){ 
+  organ_vs <- "rest"
+  } else {
+ organ_vs <- organ_ctrl
+  }
+cts_string <- paste(test_cts, collapse = '-')
+ctrl_string <- paste(unique(subset_sce$anno_lvl_2_final_clean[subset_sce$is_ctrl_ct]), collapse = '-')
+outfile_name <- glue('DE_results_{organ_test}_vs_{organ_vs}_TEST_{cts_string}_CTRL_{ctrl_string}.csv')
+de_res_ls %>%
+  purrr::reduce(bind_rows) %>%
+  write_csv(paste0(indir, outfile_name))
+```
+
+### IL1Bhi Monocytes
+
+```{r}
+## Prep data subset for testing
+organ_test <- "SK"
+organ_ctrl <- NULL
+subset_sce <- de_prep_data(sce, cts = c("MONOCYTE_II_IL1B"),
+                           organ_test = organ_test, organ_ctrl = organ_ctrl, organ_ref = NULL, n_hvgs = 7500
+                           )
+
+my_design = ~ donor + organ + test_anno:organ + 1
+my_contrast <- "`organSK` + `organSK:test_annoTRUE`"
+
+## Test in control celltypes
+de_res_ctrl <- test_de_ctrl_ct(subset_sce, my_design, my_contrast)
+
+## Test in celltypes of interest
+test_cts <- c("MONOCYTE_II_IL1B")
+de_res_ls <- lapply(test_cts, function(ct) test_de_ct(subset_sce, ct, my_design, my_contrast) )
+de_res_ls <- setNames(de_res_ls, test_cts)
+
+de_res_ls <- lapply(de_res_ls, function(de_res) mark_significant(de_res, 
+                                                                 de_res_ctrl,
+                                                                 lfc_thresh=2, 
+                                                                 alpha_thresh=0.1)
+                    )
+
+de_res_ctrl$test_celltype <- "CTRL"
+de_res_ls[['CTRL']] <- de_res_ctrl
+
+## Save output
+if (is.null(organ_ctrl)){ 
+  organ_vs <- "rest"
+  } else {
+ organ_vs <- organ_ctrl
+  }
+cts_string <- paste(test_cts, collapse = '-')
+ctrl_string <- paste(unique(subset_sce$anno_lvl_2_final_clean[subset_sce$is_ctrl_ct]), collapse = '-')
+outfile_name <- glue('DE_results_{organ_test}_vs_{organ_vs}_TEST_{cts_string}_CTRL_{ctrl_string}.csv')
+de_res_ls %>%
+  purrr::reduce(bind_rows) %>%
+  write_csv(paste0(indir, outfile_name))
+```
+
+```{r}
+## Prep data subset for testing
+organ_test <- "SP"
+organ_ctrl <- NULL
+subset_sce <- de_prep_data(sce, cts = c("MONOCYTE_II_IL1B", "MONOCYTE_III_CCR2", "MONOCYTE_I_CXCR4"),
+                           organ_test = organ_test, organ_ctrl = organ_ctrl, organ_ref = NULL, n_hvgs = 7500
+                           )
+
+my_design = ~ donor + organ + test_anno:organ + 1
+my_contrast <- "`organBM` + `organBM:test_annoTRUE`"
+
+## Test in control celltypes
+de_res_ctrl <- test_de_ctrl_ct(subset_sce, my_design, my_contrast)
+
+## Test in celltypes of interest
+test_cts <- c("MONOCYTE_II_IL1B")
+de_res_ls <- lapply(test_cts, function(ct) test_de_ct(subset_sce, ct, my_design, my_contrast) )
+de_res_ls <- setNames(de_res_ls, test_cts)
+
+de_res_ls <- lapply(de_res_ls, function(de_res) mark_significant(de_res, 
+                                                                 de_res_ctrl,
+                                                                 lfc_thresh=2, 
+                                                                 alpha_thresh=0.1)
+                    )
+
+de_res_ctrl$test_celltype <- "CTRL"
+de_res_ls[['CTRL']] <- de_res_ctrl
+
+## Save output
+if (is.null(organ_ctrl)){ 
+  organ_vs <- "rest"
+  } else {
+ organ_vs <- organ_ctrl
+  }
+cts_string <- paste(test_cts, collapse = '-')
+ctrl_string <- paste(unique(subset_sce$anno_lvl_2_final_clean[subset_sce$is_ctrl_ct]), collapse = '-')
+outfile_name <- glue('DE_results_{organ_test}_vs_{organ_vs}_TEST_{cts_string}_CTRL_{ctrl_string}.csv')
+de_res_ls %>%
+  purrr::reduce(bind_rows) %>%
+  write_csv(paste0(indir, outfile_name))
+```
+### Explore results
+
+Check correlation between logFC values
+
+```{r}
+lfc_mat <- de_res_ls %>%
+  purrr::reduce(bind_rows) %>%
+  # bind_rows(de_res_ctrl %>% mutate(test_celltype='control')) %>%
+  select(lfc, test_celltype, name) %>%
+  pivot_wider(names_from = 'test_celltype', values_from="lfc") %>%
+  drop_na() %>%
+  column_to_rownames('name') 
+
+lfc_mat <- lfc_mat[!is.infinite(rowSums(lfc_mat)),]
+corrplot::corrplot(cor(lfc_mat, method="spearman"), tl.col = 'black')
+
+```
+```{r, fig.height=6, fig.width=8}
+deg_ls <- lapply(de_res_ls, function(x) x %>% filter(adj_pval < 0.01) %>% pull(name)) 
+upset(fromList(deg_ls), order.by = c("freq"),
+      sets.x.label = "# DEGs")
+```
+
+```{r, fig.height=8, fig.width=20}
+plot_lfc_vs_ctrl <- function(de_res, min_lfc = 5, min_log10_pval = 5, alpha_lev=0.01){
+  ct <- de_res$test_celltype[1]
+  de_res %>%
+  mutate(signif = (adj_pval < alpha_lev)) %>%
+  ggplot(aes(lfc_ctrl, lfc)) +
+  geom_vline(xintercept = 0, linetype=2) + geom_hline(yintercept = 0, linetype=2) +
+  geom_point(color="black", size=0.2) +
+  geom_point(data = . %>% filter(signif), color='red', size=0.7) +
+  ggrepel::geom_text_repel(data = . %>% filter(signif & abs(lfc) > min_lfc & -log10(adj_pval) > min_log10_pval), 
+                             aes(label=name),
+                             max.overlaps=20, color='red') +
+    ggtitle(ct) +
+    theme_bw(base_size=18) +
+    xlab("logFC CTRL") + ylab(glue("logFC ({ct} TH vs {ct} rest)"))
+}
+
+for (i in 1:3){
+  d <- de_res_ls[[i]]
+  d$lfc_ctrl <- column_to_rownames(de_res_ctrl, "name")[d$name,'lfc']  
+  d$adj_pval_ctrl <- column_to_rownames(de_res_ctrl, "name")[d$name,'adj_pval']  
+  de_res_ls[[i]] <- d
+}
+
+pl_ls <- lapply(de_res_ls[1:3], function(df) plot_lfc_vs_ctrl(df,min_lfc = 3, min_log10_pval = 5))
+wrap_plots(pl_ls, ncol = 3)
+
+```
+
+### Save results
+```{r}
+de_res_ls[1:3] %>%
+  purrr::reduce(bind_rows) %>%
+  bind_rows(de_res_ctrl %>% mutate(test_celltype='control')) %>%
+  write_csv(paste0(indir, 'DE_results_THtcells_THvsOther_MATUREBctrl.csv'))
+```
+```{r}
+read_csv(paste0('/nfs/team205/ed6/data/Fetal_immune/LMM_data/DE_input_LYMPHOID_PBULK/', 'DE_results_THtcells_THvsOther_MATUREBctrl.csv')) %>%
+  # filter(name %in% c("RAG1", "PTCRA")) %>%
+  ggplot(aes(lfc, lfc_ctrl)) + geom_point(size=0.1) +
+  geom_point(data=. %>% filter(name %in% c("RAG1", "PTCRA", "DNTT")), color='red', size=0.8) +
+  ggrepel::geom_text_repel(data=. %>% filter(name %in% c("RAG1", "PTCRA", "DNTT")), aes(label=name), color='red') +
+  facet_wrap(test_celltype~.) +
+  geom_hline(yintercept = c(-3,3))
 ```
 ---
 

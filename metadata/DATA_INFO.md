@@ -64,7 +64,13 @@ AnnData components:
     - `adata.uns['nhood_adata']` an AnnData object that is used for differential abundance testing. Hhere `obs` are neighbourhoods, `vars` are samples and `adata.X` are counts of cells from each sample in each neighbourhood. This object is also separately saved in `/nfs/team205/ed6/data/Fetal_immune/milo_outs/{split_ID}/milo_nhood_adata.{split_ID}.h5ad`
 
 ### Differential expression analysis across organs
-Dataframes of log-fold changes and adjusted p-values `/nfs/team205/ed6/data/Fetal_immune/LMM_data/DE_input_HSC_IMMUNE_PBULK/DE_results_*.csv`. Important columns:
+Dataframes of log-fold changes and adjusted p-values `/nfs/team205/ed6/data/Fetal_immune/LMM_data/DE_input_HSC_IMMUNE_PBULK/DE_results_*.csv`. 
+The naming scheme:
+- `{org}_vs_{org}` indicates which organs where compared (or organ VS rest)
+- `TEST_{celltypes}` indicates for which celltypes was the test conducted (if more than one results from test on each cell type are collapsed in one table, and the column test_celltype stores which is the tested celltype)
+- `CTRL_{celltypes}` indicates which celltypes were used as control (I select celltypes that are present in all the tested organs in the same donors as the test celltypes, I pick the 3 cts with most number of cells)
+
+Important columns:
 
 - name: gene name
 - pval: p-value _before_ FDR correction

@@ -14,11 +14,17 @@ parser.add_argument("--min_age", type=int,
                     default=None)
 parser.add_argument("--split_stroma", type=bool,
                     default=False)
+parser.add_argument("--add_TECs", type=bool,
+                    default=False)
+parser.add_argument("--keep_fetal_TECs", type=bool,
+                    default=False)
 args = parser.parse_args()
 
 org = args.subset_organ
 age = args.min_age
 split_stroma = args.split_stroma
+add_tecs = args.add_TECs
+keep_fetal_TECs = args.keep_fetal_TECs
 
 def make_c2l_reference(
     ref_adata,
@@ -69,8 +75,14 @@ def save_c2l_reference(params):
         outfile = outfile + "minAge{a}.".format(a=params["min_age"])
     if params["exclude_clusters"]:
         outfile = outfile + "exclude_lowQ."
+    if params["add_TECs"]:
+        outfile = outfile + "addTECs."   
+    if params["keep_fetal_TECs"]:
+        outfile = outfile + "keep_fetal_TECs."   
     outfile = outdir + outfile + "h5ad"
-
+    
+    params.pop('add_TECs')
+    params.pop('keep_fetal_TECs')
     ref_adata = make_c2l_reference(adata, **params)
     ref_adata.write_h5ad(outfile)
 
@@ -119,6 +131,29 @@ rename_label = anno_c2l_th.anno_organ[anno_c2l_th['anno_lvl_2_final_clean'] == "
 
 adata.obs.loc[rename_cells,"anno_c2l"] = rename_label
 
+print(adata)
+## Add additional TECs
+if add_tecs:
+    th_atlas = '/lustre/scratch117/cellgen/team205/cs42/jovyan_25082021/thymusatlas/HTA07.A01.v02.entire_data_raw_count.h5ad'
+    th_atlas_anno = '/lustre/scratch117/cellgen/team205/cs42/jovyan_25082021/thymusatlas/HTA08.v01.A05.Science_human_fig1.h5ad'
+    # get TECs
+    th_adata = sc.read_h5ad(th_atlas)
+    th_adata_anno = sc.read_h5ad(th_atlas_anno, backed='r')
+    tec_labels = [x for x in th_adata_anno.obs['Anno_level_fig1'].unique() if "TEC" in x]
+    tec_cells = th_adata_anno.obs_names[th_adata_anno.obs['Anno_level_fig1'].isin(tec_labels)]
+    if keep_fetal_TECs:
+        keep_ages = [x for x in th_adata_anno.obs['Age'].unique() if x.endswith('w')]
+        tec_cells = th_adata_anno.obs_names[(th_adata_anno.obs['Anno_level_fig1'].isin(tec_labels)) & (th_adata_anno.obs['Age'].isin(keep_ages))]
+    tec_adata = th_adata[tec_cells[~tec_cells.isin(anno_c2l_th.index)]].copy()
+
+    adata.var_names_make_unique()
+    tec_adata.var_names_make_unique()
+
+    adata = adata.concatenate(tec_adata, join='outer')
+    adata.obs.loc[tec_adata.obs_names + "-1" , 'anno_lvl_2_final_clean'] = th_adata_anno[tec_adata.obs_names].obs["Anno_level_fig1"].values
+    adata.obs["anno_c2l"] = adata.obs["anno_lvl_2_final_clean"].copy()
+    print(adata)
+
 ## Save
 
 lowQ_clusters = ('DOUBLET_IMMUNE_FIBROBLAST',
@@ -137,7 +172,9 @@ params = {
                 'subset_organ':org,
                 'split_by_organ' : split_stroma,
                 'min_age':age,
-                'exclude_clusters':lowQ_clusters
+                'exclude_clusters':lowQ_clusters,
+                'add_TECs':add_tecs,
+                'keep_fetal_TECs':keep_fetal_TECs
             }
 
 save_c2l_reference(params)

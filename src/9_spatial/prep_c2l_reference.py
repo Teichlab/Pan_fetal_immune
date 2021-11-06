@@ -130,6 +130,10 @@ rename_cells = anno_c2l_th.index[anno_c2l_th['anno_lvl_2_final_clean'] == "KERAT
 rename_label = anno_c2l_th.anno_organ[anno_c2l_th['anno_lvl_2_final_clean'] == "KERATINOCYTE"].values
 
 adata.obs.loc[rename_cells,"anno_c2l"] = rename_label
+## remove leftofver keratynocytes
+remove_kera = rename_cells[adata.obs.loc[rename_cells,"anno_c2l"] == "KERATINOCYTE"]
+print("N of keratynocytes left: {n}".format(n=len(remove_kera)))
+adata = adata[~adata.obs_names.isin(remove_kera)]
 
 print(adata)
 ## Add additional TECs
@@ -156,14 +160,13 @@ if add_tecs:
 
 ## Save
 
-lowQ_clusters = ('DOUBLET_IMMUNE_FIBROBLAST',
-                     'LOW_Q_INCONSISTENT',
-                     'DOUBLET_LYMPHOID_MACROPHAGE',
-                     'DOUBLETS_FIBRO_ERY',
-                     'DOUBLET_ENDOTHELIUM_ERYTHROCYTE',
-                     'DOUBLET_ERY_B',
-                     'PLACENTAL_CONTAMINANTS',
-                     'DOUBLET')
+## Read annotation groupings
+import json
+with open('../../metadata/anno_groups.json', 'r') as json_file:
+    anno_groups_dict = json.load(json_file)
+    
+lowQ_clusters = anno_groups_dict['OTHER']
+
 
 if split_stroma:
     split_stroma = anno_groups_dict["STROMA"]

@@ -130,12 +130,8 @@ rename_cells = anno_c2l_th.index[anno_c2l_th['anno_lvl_2_final_clean'] == "KERAT
 rename_label = anno_c2l_th.anno_organ[anno_c2l_th['anno_lvl_2_final_clean'] == "KERATINOCYTE"].values
 
 adata.obs.loc[rename_cells,"anno_c2l"] = rename_label
-## remove leftofver keratynocytes
-remove_kera = rename_cells[adata.obs.loc[rename_cells,"anno_c2l"] == "KERATINOCYTE"]
-print("N of keratynocytes left: {n}".format(n=len(remove_kera)))
-adata = adata[~adata.obs_names.isin(remove_kera)]
 
-print(adata)
+
 ## Add additional TECs
 if add_tecs:
     th_atlas = '/lustre/scratch117/cellgen/team205/cs42/jovyan_25082021/thymusatlas/HTA07.A01.v02.entire_data_raw_count.h5ad'
@@ -154,9 +150,14 @@ if add_tecs:
     tec_adata.var_names_make_unique()
 
     adata = adata.concatenate(tec_adata, join='outer')
-    adata.obs.loc[tec_adata.obs_names + "-1" , 'anno_lvl_2_final_clean'] = th_adata_anno[tec_adata.obs_names].obs["Anno_level_fig1"].values
-    adata.obs["anno_c2l"] = adata.obs["anno_lvl_2_final_clean"].copy()
+    adata.obs.loc[tec_adata.obs_names + "-1" , 'anno_c2l'] = th_adata_anno[tec_adata.obs_names].obs["Anno_level_fig1"].values
+    adata.obs["anno_c2l"] = adata.obs["anno_c2l"].copy()
     print(adata)
+
+    ## remove leftofver keratynocytes
+    remove_kera = adata.obs['anno_c2l']=='KERATINOCYTE'
+    print("N of keratynocytes left: {n}".format(n=sum(remove_kera)))
+    adata = adata[~remove_kera]    
 
 ## Save
 

@@ -114,7 +114,7 @@ adata.obs = anno_obs.loc[adata.obs_names].copy()
 del anno_obs
 
 ## Restrict to organs profiled with visium
-adata = adata[adata.obs["organ"].isin(["TH", "SP", "LI"])].copy()
+adata = adata[adata.obs["organ"].isin(["TH", "SP", "LI", 'GU'])].copy()
 import gc
 gc.collect()
 

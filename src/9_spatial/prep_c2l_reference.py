@@ -131,7 +131,11 @@ rename_label = anno_c2l_th.anno_organ[anno_c2l_th['anno_lvl_2_final_clean'] == "
 
 adata.obs.loc[rename_cells,"anno_c2l"] = rename_label
 
+<<<<<<< HEAD
 
+=======
+print(adata)
+>>>>>>> 5dd7212f4c6a51469cb9d33fe0e31757e59be6b8
 ## Add additional TECs
 if add_tecs:
     th_atlas = '/lustre/scratch117/cellgen/team205/cs42/jovyan_25082021/thymusatlas/HTA07.A01.v02.entire_data_raw_count.h5ad'

@@ -184,6 +184,69 @@ def predict_label(adata, anno_col,
     adata.obs.loc[missing_anno,'predicted_anno'] = best_label
     adata.obs.loc[missing_anno,'predicted_anno_prob'] = best_label_score
 
+def predict_label2(merged_adata, anno_col = 'annotation_reference', k=50, min_score = 0.5):
+    '''
+    Predict annotation labels for query cells based on k-NNs in the reference data
+    '''
+    import time
+    from scipy.spatial import cKDTree
+
+    ## Extract embedding
+    X_emb = merged_adata.obsm["X_scvi"].copy()
+
+    is_query = merged_adata.obs["dataset"] == "query"
+    is_reference = merged_adata.obs["dataset"] == "reference"
+
+    X_emb_ref = X_emb[is_reference,:]
+    X_emb_que = X_emb[is_query,:]
+
+    ## Find nearest neighbors in reference
+    k1=k2=k
+    data_query = X_emb_que
+    data_ref = X_emb_ref
+    start = time.time()
+    k_index_ref = cKDTree(data_ref).query(x=data_query, k=k1, n_jobs=5)[1]
+    end = time.time()
+    print(end - start)
+
+    knn_mat = np.zeros(shape=[sum(is_query),sum(is_reference)])
+    for i in range(k_index_ref.shape[0]):
+        knn_mat[i, k_index_ref[i]] = 1
+
+    ## Subset to reference cells that have are NN to at least one query cell
+    keep_ref_ixs = np.unique(k_index_ref.ravel())
+    keep_ref_ixs.sort()
+    small_knn_mat = knn_mat[:,keep_ref_ixs]
+
+    ## Make dummy matrix of annotations
+    annos = merged_adata[is_reference].obs[anno_col][keep_ref_ixs].copy()
+    dummy_df = pd.get_dummies(annos)
+    dummy_mat = dummy_df.values
+
+    ## Sum number of neighbors with each annotation
+    new_anno = small_knn_mat.dot(dummy_mat)
+
+    ## Find top scorers
+    n_neighbors = np.array(small_knn_mat.sum(1)).flatten()
+    n_neighbors_ref = new_anno.sum(axis=1)
+    new_anno_prob = new_anno.T/n_neighbors_ref
+    new_anno_prob[np.isnan(new_anno_prob)] = 0
+    best_label = dummy_df.columns[new_anno_prob.argmax(0)].values
+    best_label_score = new_anno_prob.max(0)
+    best_label = best_label.astype('str')
+
+    ## Call low confidence if probability is < min_score
+    best_label_all = best_label.copy()
+    best_label[best_label_score <= min_score] = "low_confidence"
+
+    ## Save output in place
+    merged_adata.obs['predicted_anno'] = np.nan
+    merged_adata.obs['predicted_anno_unfiltered'] = np.nan
+    merged_adata.obs['predicted_anno_prob'] = np.nan
+    merged_adata.obs.loc[is_query,'predicted_anno'] = best_label
+    merged_adata.obs.loc[is_query,'predicted_anno_unfiltered'] = best_label_all
+    merged_adata.obs.loc[is_query,'predicted_anno_prob'] = best_label_score
+    
 def plot_confusion_mat(adata, query_anno_col, show_low_confidence=True, **kwargs):
     missing_anno = adata.obs["dataset"] == "query"
     if show_low_confidence:

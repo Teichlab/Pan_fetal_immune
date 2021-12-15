@@ -68,12 +68,16 @@ parser.add_argument("--ref_data_dir",
 parser.add_argument("--timestamp", 
                     default="20210429",
                     help="data time stamp")
+parser.add_argument("--k_neighbors", 
+                    default=30, type=int,
+                    help="number of neighbors")
 args = parser.parse_args()
 
 query_h5ad_file = args.query_h5ad_file
 split = args.split_name
 ref_data_dir = args.ref_data_dir
 timestamp = args.timestamp
+k_neighbors = args.k_neighbors
 
 ## Merge datasets
 print("Merging reference and query...\n")
@@ -83,7 +87,7 @@ query_adata_full = sc.read_h5ad(query_h5ad_file.split(".mapped2")[0] + ".h5ad") 
 
 ## Compute UMAP
 print("Running KNN search...\n")
-sc.pp.neighbors(merged_adata, n_neighbors=30, use_rep="X_scvi")
+sc.pp.neighbors(merged_adata, n_neighbors=k_neighbors, use_rep="X_scvi")
 print("Running UMAP...\n")
 sc.tl.umap(merged_adata, min_dist = 0.01, spread = 2)
 

@@ -1,0 +1,38 @@
+original_cell_type,updated_cell_type
+B cell,B cell
+DC precursor,DC precursor
+DC1,DC
+DC2,DC
+early erythroid,Early erythroid
+Early Erythroid,Early erythroid
+Early lymphoid_T lymphocyte,Early erythroid/T cell
+early MK,Early MK
+ELP,ELP
+Endothelial cell,Endothelial cell
+eo/baso/mast precursor,Eo/baso/mast precursor
+erythroid-MPP hybrid,Erythroid/MPP
+Fibroblast,Fibroblast
+GMP,GMP
+Hepatocyte,Hepatocyte
+HSC,HSC
+ILC precursor,ILC precursor
+Kupffer Cell,Kupffer ell
+Late Erythroid,Late erythroid
+macrophage,Macrophage
+Mast cell,Mast cell
+Megakaryocyte,Megakaryocyte
+MEMP,MEMP
+MEP,MEP
+Mid Erythroid,Mid erythroid
+Mono-Mac,Monocyte/macrophage
+Monocyte,Monocyte
+Monocyte precursor,Monocyte
+MPP,MPP
+myeloid DC progenitor,Myeloid DC progenitor
+Neutrophil-myeloid progenitor,Neutrophil myeloid progenitor
+NK,NK
+pDC precursor,pDC precursor
+pDC progenitor,pDC progenitor
+pre-B cell,Pre B
+pro-B cell,Pro B
+VCAM1+ EI macrophage,Macrophage

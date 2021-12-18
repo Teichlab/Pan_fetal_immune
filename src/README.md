@@ -6,9 +6,9 @@ Each subfolders contains scripts and notebooks used for a step in the analysis. 
 * `01_preprocess_scRNA`: scripts to collect raw data matrices in a single anndata object and collecting pre-existing annotations and metadata.
 * `02_integration_scRNA`: scripts for data integration (with BBKNN or scVI), common embedding and clustering, splitting into lineage subsets
 * `03_annotation`: scripts for cell type annotation based on marker gene expression
-* `5_organ_signatures`: scripts for analysis of organ-specific cell type signatures (with LMM and factor analysis)
-* `6_trajectory_inference`: scripts for trajectory inference on immune cells
-* `7_differential_abundance`: scripts for differential abundance analysis in time with Milo
-* `8_align_query`: scripts to map new data to panfetal references with scArches implementation in `scvi-tools`
+* `04_milo_analysis`: scripts and notebooks for differential abundance and differential expression analysis of variation across organs and gestation in lymphoid and myeloid compartments 
+* `05_adult2fetal_mapping`: scripts for mapping of adult data from [Pan Immune Project](https://www.biorxiv.org/content/10.1101/2021.04.28.441762v2.full) to fetal reference with [scArches](https://docs.scvi-tools.org/en/stable/tutorials/notebooks/scarches_scvi_tools.html)
+
+
 * `_misc` miscellaneous analyses and scripts
 * `utils` contains utility functions used in many analyses

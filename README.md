@@ -1,5 +1,5 @@
-# Pan_fetal_immune
-Collection of scripts for analysis of fetal immune atlas (see our [preprint]())
+# Mapping the developing human immune system across organs
+Data processing and analysis scripts for fetal immune atlas (see our [preprint]())
 
 ## Contents
 

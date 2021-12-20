@@ -2,9 +2,9 @@
 
 ## scRNA-seq datasets
 
-Full single-cell RNA-seq dataset (n cells, 11 developmental time points, 9 tissues)
+Full dataset of single-cell RNA-seq profiles from 9 developmental tissues across gestation (4-17 pcw).
 
-[Interactive viewer](PAN.A01.v01.raw_count.20210429.PFI.embedding.cellxgene.h5ad) | [download .h5ad file](PAN.A01.v01.raw_count.20210429.PFI.embedding.h5ad) | [download scVI model](scRNA_data/scVI_models/scvi_PFI_model)
+[Interactive viewer](PAN.A01.v01.raw_count.20210429.PFI.embedding.cellxgene.h5ad) | [download .h5ad file](PAN.A01.v01.raw_count.20210429.PFI.embedding.h5ad) | [download scVI model](scRNA_data/scVI_models/scvi_PFI_model) | [download .csv file of cell annotations](scRNA_data/PAN.A01.v01.entire_data_normalised_log.20210429.full_obs.annotated.clean.csv)
 
 ### Cell type lineages
 
@@ -16,6 +16,8 @@ Full single-cell RNA-seq dataset (n cells, 11 developmental time points, 9 tissu
 - Lymphoid cells | [Interactive viewer](scRNA_data/PAN.A01.v01.raw_count.20210429.LYMPHOID.embedding.cellxgene.h5ad) | [download .h5ad file](scRNA_data/PAN.A01.v01.raw_count.20210429.LYMPHOID.embedding.h5ad) | [download scVI model](scRNA_data/scVI_models/scvi_LYMPHOID_model)
 - NK/T cells | [Interactive viewer](scRNA_data/PAN.A01.v01.raw_count.20210429.NKT.embedding.cellxgene.h5ad) | [download .h5ad file](scRNA_data/PAN.A01.v01.raw_count.20210429.NKT.embedding.h5ad) | [download scVI model](scRNA_data/scVI_models/scvi_NKT_model)
 
+See our [code repository](https://github.com/emdann/Pan_fetal_immune/tree/cleaning/src/utils/scArches_utils) for example use of scVI models for reference-based mapping of new single-cell RNA-seq experiments. 
+
 ### _In vitro_ T cell development
 
 Single-cell RNA-seq dataset of _in vitro_ derived T cells, from Artificial Thymic Organoid protocol (n cells) 
@@ -24,15 +26,19 @@ Single-cell RNA-seq dataset of _in vitro_ derived T cells, from Artificial Thymi
 
 ## VDJ datasets
 
+Datasets of combined single-cell RNA-seq profiles and adaptive immune receptor repertoire data.
+
 - abTCR data | [download .h5ad file](scVDJ_data/PAN.A01.v01.raw_count.20210429.NKT.embedding.abTCR.h5ad)
 - gdTCR data | [download .h5ad file](scVDJ_data/PAN.A01.v01.raw_count.20210429.NKT.embedding.gdTCR.h5ad)
 - BCR data | [download .h5ad file](scVDJ_data/PAN.A01.v01.raw_count.20210429.LYMPHOID.embedding.BCR.h5ad)
 
 ## Spatial transcriptomics datasets (Visium 10X)
 
-- Fetal liver | [download .h5ad file](Visium_data/Visium10X_data_LI.h5ad)
-- Fetal spleen | [download .h5ad file](Visium_data/Visium10X_data_TH.h5ad)
-- Fetal thymus | [download .h5ad file](Visium_data/Visium10X_data_SP.h5ad)
+Datasets of spatial transcriptomics profiles for 3 developing tissues (18 pcw). 
+
+- Fetal liver (3 slides) | [download .h5ad file](Visium_data/Visium10X_data_LI.h5ad)
+- Fetal spleen (4 slides) | [download .h5ad file](Visium_data/Visium10X_data_TH.h5ad)
+- Fetal thymus (3 slides) | [download .h5ad file](Visium_data/Visium10X_data_SP.h5ad)
 
 ## Contact information
 We welcome feedback and suggestions on how to improve this data portal to further facilitate re-use of our dataset. Please send any queries to Emma Dann `ed6<at>sanger.ac.uk` or Chenqu Suo `cs43<at>sanger.ac.uk`.

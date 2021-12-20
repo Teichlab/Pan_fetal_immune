@@ -36,9 +36,11 @@ Datasets of combined single-cell RNA-seq profiles and adaptive immune receptor r
 
 Datasets of spatial transcriptomics profiles for 3 developing tissues (18 pcw). 
 
-- Fetal liver (3 slides) | [download .h5ad file](Visium_data/Visium10X_data_LI.h5ad)
-- Fetal spleen (4 slides) | [download .h5ad file](Visium_data/Visium10X_data_TH.h5ad)
-- Fetal thymus (3 slides) | [download .h5ad file](Visium_data/Visium10X_data_SP.h5ad)
+- Fetal liver (3 slides) | [download .h5ad file](Visium_data/Visium10X_data_LI.h5ad) | [download high res images](Visium_data/LI_img/)
+- Fetal thymus (3 slides) | [download .h5ad file](Visium_data/Visium10X_data_SP.h5ad) | [download high res images](Visium_data/TH_img/)
+- Fetal spleen (4 slides) | [download .h5ad file](Visium_data/Visium10X_data_TH.h5ad) | [download high res images](Visium_data/SP_img/)
+
+See [this notebook]() for example exploration and analysis of spatial gene expression data and stored outputs from spatial cell type mapping.
 
 ## Contact information
 We welcome feedback and suggestions on how to improve this data portal to further facilitate re-use of our dataset. Please send any queries to Emma Dann `ed6<at>sanger.ac.uk` or Chenqu Suo `cs43<at>sanger.ac.uk`.

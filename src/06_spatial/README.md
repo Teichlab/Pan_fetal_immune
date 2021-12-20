@@ -1,6 +1,7 @@
 This folder contains the main scripts for analysis of Visium slides and spatial cell type mapping from scRNA-seq data with [cell2location](https://cell2location.readthedocs.io/en/latest/)
 
 - `c2l_mapping/` - contains the main scripts for cell type mapping with cell2location (more versions in https://github.com/vitkl/pan_fetal_immune_mapping)
+- `spatial_tissue_detection_example.ipynb` - example notebook for code used for tissue detection from H&E images
 - `spatial_c2l_output_EDA.ipynb` - downstream analysis and plotting notebook
 
 ## Spatial celltype mapping workflow

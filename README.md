@@ -5,9 +5,6 @@ Data processing and analysis scripts for fetal immune atlas (see our [preprint](
 
 * [`src`](https://github.com/emdann/Pan_fetal_immune/edit/master/src) contains scripts and notebooks used for data processing and analysis.
 * [`metadata`](https://github.com/emdann/Pan_fetal_immune/edit/master/metadata): contains metadata relevant for sample and cell annotations, pointers to raw and processed data, color palettes and groupings.
-<!-- * `legacy_code`: old notebooks and scripts that have been refactored in the main analyses, but worth keeping to retain useful snippets
-* `thrash_n_snippets`: discarded code not included in main analysis
- -->
 
 ## Data information
 

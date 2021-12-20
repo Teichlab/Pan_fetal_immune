@@ -13,7 +13,7 @@ Data processing and analysis scripts for fetal immune atlas (see our [preprint](
 
 Processed datasets are available as [AnnData](https://anndata.readthedocs.io/) objects in `h5ad` format from [ourwebpage.org]().
 
-Raw data is deposited in ArrayExpress: [scRNA-seq]() | [Visium 10X]() | [VDJ sequencing]()
+Raw data is deposited in ArrayExpress, under accessions [scRNA-seq-code]() (scRNA-seq), [Visium-code]() (Visium 10X), [VDJ-code]() (VDJ sequencing).
 
 ## Contact
 

@@ -4,7 +4,7 @@
 
 Full dataset of single-cell RNA-seq profiles from 9 developmental tissues across gestation (4-17 pcw).
 
-[Interactive viewer](PAN.A01.v01.raw_count.20210429.PFI.embedding.cellxgene.h5ad) | [download .h5ad file](PAN.A01.v01.raw_count.20210429.PFI.embedding.h5ad) | [download scVI model](scRNA_data/scVI_models/scvi_PFI_model) | [download .csv file of cell annotations](scRNA_data/PAN.A01.v01.entire_data_normalised_log.20210429.full_obs.annotated.clean.csv)
+[Interactive viewer](PAN.A01.v01.raw_count.20210429.PFI.embedding.cellxgene.h5ad) | [download .h5ad file](PAN.A01.v01.raw_count.20210429.PFI.embedding.h5ad) | [download scVI model](scRNA_data/scVI_models/scvi_PFI_model) | [download .csv file of cell annotations](scRNA_data/PAN.A01.v01.entire_data_normalised_log.20210429.full_obs.annotated.clean.csv) | [download CellTypist model](scRNA_data/celltypist_model.Pan_Fetal_Human.pkl)
 
 ### Cell type lineages
 

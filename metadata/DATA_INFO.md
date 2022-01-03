@@ -3,7 +3,7 @@
 ## Raw data matrices
 - STARSOLO Mapping and cellbender outputs: `/lustre/scratch117/cellgen/team205/sharedData/ly5/cellbender/`
 - Filtered `.h5ad` for each sample: `/nfs/team205/ed6/data/Fetal_immune/cellbender_raw/`
-- Souporcell output: `...`
+- Souporcell output: `/lustre/scratch117/cellgen/team205/sharedData/cs42/souporcell/panfetal-donor/`
 
 ### Working anndata objects
 

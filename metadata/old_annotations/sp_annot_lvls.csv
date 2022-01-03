@@ -1,0 +1,47 @@
+original_cell_type,updated_cell_type
+B_cell,B cell
+CD8_Tcell,CD8 T cell
+DC1,DC
+DC2,DC
+Early_Erythroid,Early erythroid
+Early_Megakaryocyte_progenitor,Early MK
+Erythroid,Erythroid
+Fibroblast,Fibroblast
+Fibroblast_expressing_pericyte_features,Fibroblast
+HSC,HSC
+ILC_Progenitor,ILC
+ILC2,ILC
+ILC3,ILC
+Late_Megakaryocyte,Late MK
+Late_neural_crest_cells,Late neural crest cells
+Macrophage_Proliferating,Macrophage
+Mast_cell,Mast cel
+MEMP,MEMP
+Mesenchymal stem cell_endothelial cell,MSC/Endothelial cell
+Mid_Erythroid,Mid erythroid
+Mid_Megakaryocyte,Mid MK
+Mig_Macrophage,Macrophage
+Mono_Mac,Monocyte/macrophage
+Monocyte,Monocyte
+Monocyte_DC_precursor,Monocyte/DC precursor
+MSC_expressing_Muscle_and_proliferative_features,Muscle
+MSC_expressing_Muscle_features,Muscle
+Muscle_expressing_pericyte_features,Pericyte
+Myofibroblast,Myofibroblast
+Myofibroblast_expressing_pericyte_features,Myofibroblast
+Neut,Neutrophil
+Neut_Myeloid_Progenitor,Neutrophil progenitor
+Neut_Progenitor,Neutrophil progenitor
+NK_cells,NK
+NK_Proliferating,NK
+NKT,NK T
+pDC,pDC
+Pre_B_cells_Proliferative,Pre B
+Pre_Pro_B_cells,Pre Pro B
+Pro_B_cells_Proliferative,Pro B
+Proliferative_fibroblast,Fibroblast
+RP_Macrophage,Macrophage
+Splenic_endothelial_cell_expressing_HEV_Markers,Endothelial cell
+T_cell,T cell
+T_cells_Proiferating,T cell
+Unknown,Unknown

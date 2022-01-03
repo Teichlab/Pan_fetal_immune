@@ -1,0 +1,31 @@
+original_cell_type,updated_cell_type
+CMP,CMP
+DC2,DC
+Early_Erythroid,Early erythroid
+Endoderm,Endoderm
+Eo_Baso_Mast_precursor,Eo/base/mast precursor
+Eo_Basophil,Eo/basophil
+Epithelium,Epithelium
+Erythroid,Erythroid
+Fibroblast,Fibroblast
+HSC,HSC
+IL33+_Endothelium,Endothelium
+ILC_precursor,ILC precursor
+LMPP,LMPP
+Lymphoid_progenitor,Lymphoid progenitor
+LYVE1+_Endothelium,Endothelium
+Mac_DC_precursor,Macrophage/DC precursor
+Macrophage,Macrophage
+Mast_cell,Mast cell
+MEMP,MEMP
+microglia,Microglia
+MK,Megakaryocyte
+Monocyte,Monocyte
+Monocyte_Macrophage,Monocyte/macrophage
+MOP,MOP
+MPP,MPP
+MPP2,MPP
+Neutrophil_precursor,Neutrophil precursor
+NK,NK
+Promonocyte,Promonocyte
+Smooth_Muscle,Muscle

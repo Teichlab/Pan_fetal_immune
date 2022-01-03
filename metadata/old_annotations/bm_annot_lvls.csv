@@ -1,0 +1,65 @@
+original_cell_type,updated_cell_type
+adipo-CAR,Adipocyte
+arteriolar fibroblast,Fibroblast
+basophil,Basophil
+CD14 monocyte,Monocyte
+CD4 T cell,CD4 T cell
+CD56 bright NK,NK
+CD8 T cell,CD8 T cell
+chondrocyte,Chondrocyte
+CMP,CMP
+DC precursor,DC precursor
+DC1,DC
+DC2,DC
+DC3,DC
+early erythroid,Early erythroid
+early MK,Early MK
+early osteoblast,Early osteoblast
+ELP,ELP
+endosteal fibroblast,Fibroblast
+eo/baso/mast precursor,Eo/baso/mast precursor
+eosinophil,Eosinophil
+erythroid macrophage,Macrophage
+GMP,GMP
+HSC,HSC
+ILC precursor,ILC precursor
+immature B cell,B cell
+immature EC,Erythrocyte
+late erythroid,Late erythroid
+LMPP,LMPP
+mast cell,Mast cell
+mature NK,NK
+MEMP,MEMP
+MEP,MEP
+mid erythroid,Mid erythroid
+MK,Megakaryocyte
+monocytoid macrophage,Macrophage
+MOP,MOP
+MPP myeloid,MPP myeloid
+muscle,Muscle
+muscle stem cell,Muscle stem cell
+myelocyte,Myelocyte
+myeloid DC progenitor,Myeloid DC progenitor
+myofibroblast,Myofibroblast
+naive B cell,B cell
+neutrophil,Neutrophil
+NK progenitor,NK progenitor
+NK T cell,NK T
+osteoblast,Osteoblast
+osteoblast precursor,Osteoblast precursor
+osteochondral precursor,Osteochondral precursor
+osteoclast,Osteoclast
+pDC,pDC
+pDC progenitor,pDC progenitor
+pre B progenitor,Pre B
+pre pro B progenitor,Pre pro B
+pro B progenitor,Pro B
+proliferating EC,Endothelial cell
+promonocyte,Promonocyte
+promyelocyte,Promyelocyte
+schwann cells,Schwann cells
+sinusoidal EC,Erythrocyte
+stromal macrophage,Macrophage
+tDC,DC
+tip EC,Erythrocyte
+Treg,Treg

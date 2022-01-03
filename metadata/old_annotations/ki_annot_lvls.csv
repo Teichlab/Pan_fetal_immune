@@ -1,0 +1,45 @@
+original_cell_type,updated_cell_type
+Fibroblast 1,FIBROBLAST
+Stroma progenitor,STROMA PROGENITOR
+Fibroblast 2,FIBROBLAST
+Myofibroblast 1,MYOFIBROBLAST
+Myofibroblast 2,MYOFIBROBLAST
+Proliferating myofibroblast,MYOFIBROBLAST
+Proliferating stroma progenitor,STROMA PROGENITOR
+Proliferating fibroblast,FIBROBLAST
+Neuron,NEURON
+Endothelium,ENDOTHELIAL CELL
+CNT/PC - proximal UB,NEPHRON
+Medial S shaped body,NEPHRON
+Podocyte,NEPHRON
+Proliferating distal renal vesicle,NEPHRON
+Proximal tubule,NEPHRON
+Proximal S shaped body,NEPHRON
+Proliferating cap mesenchyme,NEPHRON
+Loop of Henle,NEPHRON
+Cap mesenchyme,NEPHRON
+Distal renal vesicle,NEPHRON
+Proximal UB,NEPHRON
+Distal S shaped body,NEPHRON
+Proximal renal vesicle,NEPHRON
+Pelvic epithelium - distal UB,NEPHRON
+Macrophage 1,MACROPHAGE
+Megakaryocyte,MEGAKARYOCYTE
+Mast cells,MAST CELL
+Proliferating monocyte,MONOCYTE
+Proliferating macrophage,MACROPHAGE
+Neutrophil,NEUTROPHIL
+NK cell,NK
+Erythroid,ERYTHROID
+cDC2,DC
+Macrophage 2,MACROPHAGE
+Innate like lymphocyte,ILC
+Proliferating NK cell,NK
+Proliferating cDC2,DC
+CD8 T cell,SP T CELL
+Monocyte,MONOCYTE
+pDC,PDC
+CD4 T cell,SP T CELL
+cDC1,DC
+Proliferating B cell,B CELL
+B cell,B CELL

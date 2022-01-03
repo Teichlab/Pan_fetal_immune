@@ -1,15 +1,15 @@
-This directory contains source code used in the preprocessing of data or analysis of the project. 
-
-Each subfolders contains scripts and notebooks used for a step in the analysis. The numbering indicates the order in which analysis steps are executed. Files/folders that are not numbered and start with a underscore `_` are not part of the main analysis steps.  
+This directory contains scripts and notebooks used in the preprocessing and analysis of fetal immune dataset. 
 
 ## Contents
-* `1_PFI_merging`: scripts to collect raw data matrices in a single anndata object and collecting pre-existing annotations and metadata.
-* `2_batch_correction`: scripts for batch correction (with BBKNN or scVI)
-* `3_clustering`: scripts for clustering and subclustering for unified cell annotations
-* `4_annotation`: scripts for cell type annotation based on marker gene expression
-* `5_organ_signatures`: scripts for analysis of organ-specific cell type signatures (with LMM and factor analysis)
-* `6_trajectory_inference`: scripts for trajectory inference on immune cells
-* `7_differential_abundance`: scripts for differential abundance analysis in time with Milo
-* `8_align_query`: scripts to map new data to panfetal references with scArches implementation in `scvi-tools`
-* `_misc` miscellaneous analyses and scripts
-* `utils` contains utility functions used in many analyses
+
+* `01_preprocess_scRNA`: scripts to collect raw data matrices in a single anndata object and collecting pre-existing annotations and metadata.
+* `02_integration_scRNA`: scripts for data integration (with [scVI](https://scvi-tools.org/) or [BBKNN](https://github.com/Teichlab/bbknn)), common embedding and clustering, splitting into lineage subsets
+* `03_annotation`: scripts for cell type annotation based on marker gene expression
+* `04_milo_analysis`: scripts and notebooks for differential abundance analysis with [Milo](https://github.com/emdann/milopy) and differential expression analysis of variation across organs and gestation in lymphoid and myeloid compartments.
+* `05_adult2fetal_mapping`: scripts for mapping of adult data from [Pan Immune Project](https://www.biorxiv.org/content/10.1101/2021.04.28.441762v2.full) to fetal reference with [scArches](https://docs.scvi-tools.org/en/stable/tutorials/notebooks/scarches_scvi_tools.html)
+* `06_spatial`: scripts for spatial mapping of cell types in Visium spatial transcriptomics data with [cell2location](https://cell2location.readthedocs.io/en/latest/)
+* `07_widespread_hematopoiesis`: scripts and notebooks for analysis of distribution of immune cell progenitors across organs, including analysis of spatial distribution of B cell progenitors and cell-cell interactions with [CellPhoneDB](https://github.com/Teichlab/cellphonedb).
+* `08_B1`: scripts and notebooks for analysis of features of putative B1 cells in developing organs, including BCR analysis with [dandelion](https://github.com/zktuong/dandelion)
+* `09_unconv_Tcells`: scripts and notebooks for characterization of unconventional T cells in developing organs, including TCR analysis with [scirpy](https://github.com/icbi-lab/scirpy)
+* `_misc`: miscellaneous analyses and scripts
+* `utils` contains utility functions and scripts used in many analyses

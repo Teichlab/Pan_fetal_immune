@@ -1,0 +1,50 @@
+original_cell_type,updated_cell_type
+Macrophage,MACROPHAGE
+Monocyte,MONOCYTE
+Granulocyte progenitor,GMP
+DC2,DC2
+Microglia,GLIA
+Monocyte precusor,MONOCYTE/DC PRECURSOR
+Fibroblast WNT2+,FIBROBLAST
+NK cell,NK
+B cell,B CELL
+Lti,LTI/ILC3
+ILC3,LTI/ILC3
+MEMP,MEMP
+CD4 T cell,CD4 T CELL
+HSC,HSC
+Mac-mono,MONOCYTE/MACROPHAGE
+Lymphatic endothelium,ENDOTHELIAL CELL
+NK T cell,NK T
+CD8 T cell,CD8 T CELL
+Skeletal muscle,MUSCLE
+pDC,PDC
+Mast cell,MAST CELL
+DC1,DC1
+Vascular endothelium,ENDOTHELIAL CELL
+Neutrophil,NEUTROPHIL
+Langerhans cell,LANGERHAN CELLS
+Megakaryocyte,MEGAKARYOCYTE
+Erythroid,ERYTHROID
+Myofibroblast,FIBROBLAST
+Fibroblast HF,FIBROBLAST
+Fibroblast HOX5+,FIBROBLAST
+Fibroblast unknown,FIBROBLAST
+Pericyte,PERICYTE
+Fibroblast FRZB+,FIBROBLAST
+Early erythroid,EARLY ERYTHROID
+Neuronal cells,NEURON
+Schwann cell,SCHWANN CELLS
+Smooth muscle,SMOOTH MUSCLE/PERICYTE
+ILC2,ILC2
+Lymphoid progenitor,LYMPHOID PROGENITOR
+Adipocyte,ADIPOCYTE
+Treg,TREG
+ASDC,DC
+Periderm,PERIDERM
+Melanocyte,MELANOCYTE
+Melanoblast,MELANOBLAST
+Basal KC,BASAL KC
+Suprabasal KC,KERATINOCYTES
+Fibroblast dermal papillia,FIBROBLAST
+HF KC,KERATINOCYTES

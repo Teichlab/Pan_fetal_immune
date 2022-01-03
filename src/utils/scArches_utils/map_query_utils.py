@@ -52,12 +52,6 @@ def _map_query_to_panfetal(
     ## Extract gene ids if not
     if not vars_overlap:
         raise ValueError("Vars don't overlap -- convert to geneIDs")
-#         print("Vars don't overlap -- converting to geneIDs")
-#         adata_ref_var = pd.read_csv(scvi_outs_dir + 'PAN.A01.v01.entire_data_normalised_log.{t}.{s}.var.csv'.format(t=timestamp, s=split), index_col=0)
-#         adata_ref_var.iloc[var_names_model]['GeneID'].to_csv(scvi_outs_dir + model_dir + "var_names.csv", header=None, index=False)
-#         query_adata.var["gene_name"] = query_adata.var_names.copy()
-#         query_adata.var_names = query_adata.var[query_gene_id_col]
-#         var_names_model = pd.read_csv(scvi_outs_dir + model_dir + "var_names.csv", header=None)[0].values
     
     ## Add batch column
     if "bbk" not in query_adata.obs.columns:

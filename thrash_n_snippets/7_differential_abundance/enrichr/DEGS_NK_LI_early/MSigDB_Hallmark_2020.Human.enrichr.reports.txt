@@ -1,0 +1,2 @@
+Gene_set	Term	Overlap	P-value	Adjusted P-value	Old P-value	Old Adjusted P-value	Odds Ratio	Combined Score	Genes
+MSigDB_Hallmark_2020	Myc Targets V1	1/200	0.06794426888853011	0.06794426888853011	0	0	16.57788944723618	44.579063482654064	RPS10

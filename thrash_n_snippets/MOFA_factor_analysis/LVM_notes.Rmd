@@ -1,0 +1,82 @@
+---
+title: "A reading list and notes on Latent Variable Models"
+author: Emma Dann
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction to Factor Analysis
+The goal of FA is to identify a set of factors $K$ that explain dependendies between features in a dataset of vectors $y_n$, by the model:
+
+$$
+y_n = \sum_{k=1}^{K}{z_{n,k}w_k + \epsilon_n}
+$$
+where $z_{n,k}$ is the value of the $k$-th latent factor, $w_k$ contains the weights of the factor on the features in the data and $\epsilon_n$ is Gaussian noise (the residuals). 
+
+## Probabilistic PCA ()
+
+**Lawrence 2004** https://proceedings.neurips.cc/paper/2003/file/9657c1fffd38824e5ab0472e022e577e-Paper.pdf 
+**Lawrence 2005, Probabilistic Non-linear Principal Component Analysis with Gaussian Process Latent Variable Models** https://www.jmlr.org/papers/volume6/lawrence05a/lawrence05a.pdf
+
+Probabilistic PCA (PPCA) is a latent variable model in which the maximum likelihood solution for the parameters is found through solving an eigenvalue problem on the data’s covariance matrix. 
+
+Given a D dimensional $y_n$ and the latent variable $x_n$, the relationship between latent variable and data point is:
+$$
+y_n=Wx_n + \epsilon_n
+$$
+
+We can write the following **likelihood** for each data point:
+$$
+p(y_n|x_n, W,\beta) = \mathcal{N}(y_n|Wx_n, \beta^{-1}I)
+$$
+To obtain the marginal likelihood we integrate over the latent variables:
+$$
+p(y_n|W,\beta) = \int p(y_n|x_n, W, \beta) p(x_n)dx_n
+$$
+Where
+
+- $p(x_n) = \mathcal{N}(x_n|0,I)$ (i.e. is Gaussian distributed with unit covariance)
+- $W$ are the weights of the latent variable (what we need to find)
+
+To find the solution for $W$, we need to maximize the following likelihood over the full the dataset:
+$$
+p(Y|W,\beta) = \prod_{n=1}^{N}p(y_n|W,\beta)
+$$
+
+Marginalising the latent variables and optimising the parameters via maximum likelihood is
+a standard approach for fitting latent variable models. Tipping and Bishop (1999) showed that the analytical solution to this maximisation is achieved when $W$ spans the principal subspace of the data, hence this model is interpreted as a _probabilistic_ PCA.
+
+
+Lawrence (2004) introduces a twist to this procedure, by marginalizing over $W$ and optimizing with respect to the latent variables (the matrix $X$).
+
+To marginalise over $W$ we have to specify a **prior** distribution for $W$, so let's make it Gaussian: 
+$$
+p(W) = \prod_{i=1}^{D}\mathcal{N}(w_i|0, I)
+$$
+and integrating the likelihood over $W$ we obtain a marginalized likelihood for $Y$
+$$
+p(Y|X,\beta) = \prod_{d=1}^{D}p(y_d|X,\beta)
+$$
+
+We can show that the values for $X$ that maximise the likelihood are $X = ULV^T$
+
+- $U$ is an $N \times q$ matrix whose columns are the first $q$ eigenvectors of $YY^T$
+- $L$ is $q \times q$ diagonal matrix of eigenvalues
+- $V$ is an arbitrary $q \times q$ rotation matrix
+
+Hence, it's all PCA.
+
+## Gaussian Process Latent Variable Models
+
+What does the dual probabilistic PCA formulation tells us? In the first formulation by Tipping and Bishop we are mapping from the observed data space to the latent variables. In the twist by Lawrence, we map from the latent space to the space of observed data $Y$. The marginal likelihood of the formulation by Lawrence can be viewed as the product of $D$ independent Gaussian Processes, with a linear covariance function $XX^T$. New probabilistic models can be formulated allowing different covariance functions, allowing for non-linear processes, auch as using the RBF kernel:
+$$
+k_{n,m} = \alpha \ exp(-\frac{\gamma}{2}(x_n - x_m)^T(x_n - x_m)) + \delta_{nm}\beta^{-1}
+$$
+
+
+## Group Factor Analysis
+Klami et al. 2014 https://arxiv.org/abs/1411.5799 
+Arguela

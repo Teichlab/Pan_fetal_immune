@@ -5,7 +5,8 @@ This directory stores structured metadata about the observations collected for t
 * `souporcell_results/`: barcodes from potential maternal contamination 
 * `old_annotations/`: collection of uniformed cell type annotations from previous publications and original authors for scRNA-seq datasets included in the study
 * `marker_genes/`: tables of marker genes for each annotated cell type
-* `DATA_INFO.md`: information on processed and raw data for internal use
+* `220621_FACs_gating_proportions_correct.csv`: table of CD45 FACS gate quantifications (used for adjusting sorting effects in differential abunance analysis) 
+* `DATA_INFO.md`: information on processed and raw data (for internal use)
 * `cc_genes.csv`: list of cell cycle genes used for feature selection
 * `organ_colors.csv`: color palette for organs
 * `anno_groups.json`: dictionary of assignment of cell type labels to broad lineage groups

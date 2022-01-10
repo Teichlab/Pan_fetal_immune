@@ -12,4 +12,4 @@ This directory contains scripts and notebooks used in the preprocessing and anal
 * `08_B1`: scripts and notebooks for analysis of features of putative B1 cells in developing organs, including BCR analysis with [dandelion](https://github.com/zktuong/dandelion)
 * `09_unconv_Tcells`: scripts and notebooks for characterization of unconventional T cells in developing organs, including TCR analysis with [scirpy](https://github.com/icbi-lab/scirpy)
 * `_misc`: miscellaneous analyses and scripts
-* `utils` contains utility functions and scripts used in many analyses
+* `utils` contains utility functions and scripts used in multiple analyses

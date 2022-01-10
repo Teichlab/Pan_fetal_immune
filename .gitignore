@@ -130,3 +130,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .Rproj.user
+
+# Custom
+metadata/DATA_INFO.md
+thrash_n_snippets/

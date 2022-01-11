@@ -8,9 +8,7 @@ Data processing and analysis scripts for fetal immune atlas (see our [preprint](
 
 ## Data information
 
-Processed datasets are available as [AnnData](https://anndata.readthedocs.io/) objects in `h5ad` format from [ourwebpage.org]().
-
-Raw data is deposited in ArrayExpress, under accessions [scRNA-seq-code]() (scRNA-seq), [Visium-code]() (Visium 10X), [VDJ-code]() (VDJ sequencing).
+Processed datasets in `h5ad` format and trained scVI models are available at [https://developmentcellatlas.cellgeni.sanger.ac.uk/fetal-immune](https://developmentcellatlas.cellgeni.sanger.ac.uk/fetal-immune).
 
 ## Contact
 

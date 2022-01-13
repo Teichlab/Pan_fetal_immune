@@ -12,9 +12,9 @@ Processed datasets in `h5ad` format and trained scVI models are available at [ht
 
 ## Model re-use tutorials
 
-- [Mapping query data to fetal immune reference with scArches]
+- [Mapping query data to fetal immune reference with scArches](https://nbviewer.org/github/Teichlab/Pan_fetal_immune/blob/master/tutorials/tutorial_query2reference_mapping.ipynb) 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Teichlab/Pan_fetal_immune/blob/master/tutorials/tutorial_query2reference_mapping.ipynb)
-- [Automatic cell type annotation from fetal immune reference with CellTypist](https://nbviewer.org/github/Teichlab/Pan_fetal_immune/blob/master/tutorials/tutorial_celltypist_fetal_immune.ipynb)
+- [Automatic cell type annotation from fetal immune reference with CellTypist](https://nbviewer.org/github/Teichlab/Pan_fetal_immune/blob/master/tutorials/tutorial_celltypist_fetal_immune.ipynb)[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Teichlab/Pan_fetal_immune/blob/master/tutorials/tutorial_celltypist_fetal_immune.ipynb)
 
 ## Contact
 

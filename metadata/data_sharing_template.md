@@ -16,11 +16,11 @@ Full dataset of single-cell RNA-seq profiles from 9 developmental tissues across
 - Lymphoid cells | [Interactive viewer](scRNA_data/PAN.A01.v01.raw_count.20210429.LYMPHOID.embedding.cellxgene.h5ad) | [download .h5ad file](scRNA_data/PAN.A01.v01.raw_count.20210429.LYMPHOID.embedding.h5ad) | [download scVI model](scRNA_data/scVI_models/scvi_LYMPHOID_model)
 - NK/T cells | [Interactive viewer](scRNA_data/PAN.A01.v01.raw_count.20210429.NKT.embedding.cellxgene.h5ad) | [download .h5ad file](scRNA_data/PAN.A01.v01.raw_count.20210429.NKT.embedding.h5ad) | [download scVI model](scRNA_data/scVI_models/scvi_NKT_model)
 
-See our [code repository](https://github.com/emdann/Pan_fetal_immune/tree/cleaning/src/utils/scArches_utils) for example use of scVI models for reference-based mapping of new single-cell RNA-seq experiments. 
+See our [code repository](https://github.com/Teichlab/Pan_fetal_immune/tree/master/src/utils/scArches_utils) for example use of scVI models for reference-based mapping of new single-cell RNA-seq experiments. 
 
 ### _In vitro_ T cell development
 
-Single-cell RNA-seq dataset of _in vitro_ derived T cells, from Artificial Thymic Organoid protocol (n cells) 
+Single-cell RNA-seq dataset of _in vitro_ derived T cells, from Artificial Thymic Organoid protocol (10459 cells) 
 
 [Interactive viewer](ATO_adata.cellxgene.h5ad) | [download .h5ad file](ATO_adata.h5ad)
 
@@ -43,4 +43,6 @@ Datasets of spatial transcriptomics profiles for 3 developing tissues (18 pcw).
 See [this notebook]() for example exploration and analysis of spatial gene expression data and stored outputs from spatial cell type mapping.
 
 ## Contact information
+This data has been generated and processed as a collaboration between the [Teichmann Lab](http://www.teichlab.org/) and [Haniffa Lab](https://haniffalab.com/), based at the [Wellcome Sanger Insitute](https://www.sanger.ac.uk/) and [Newcastle University](https://www.ncl.ac.uk/) 
+
 We welcome feedback and suggestions on how to improve this data portal to further facilitate re-use of our dataset. Please send any queries to Emma Dann `ed6<at>sanger.ac.uk` or Chenqu Suo `cs43<at>sanger.ac.uk`.

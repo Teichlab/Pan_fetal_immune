@@ -10,7 +10,7 @@ Data processing and analysis scripts for fetal immune atlas (see our [preprint](
 
 Processed datasets in `h5ad` format and trained scVI models are available at [https://developmentcellatlas.cellgeni.sanger.ac.uk/fetal-immune](https://developmentcellatlas.cellgeni.sanger.ac.uk/fetal-immune).
 
-## Data re-use tutorials
+## Model re-use tutorials
 
 - [Mapping query data to fetal immune reference with scArches](https://nbviewer.org/github/Teichlab/Pan_fetal_immune/blob/master/tutorials/tutorial_query2reference_mapping.ipynb)
 - [Automatic cell type annotation from fetal immune reference with CellTypist](https://nbviewer.org/github/Teichlab/Pan_fetal_immune/blob/master/tutorials/tutorial_celltypist_fetal_immune.ipynb)

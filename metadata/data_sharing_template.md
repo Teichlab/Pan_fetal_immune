@@ -6,6 +6,8 @@ Full dataset of single-cell RNA-seq profiles from 9 developmental tissues across
 
 [Interactive viewer](PAN.A01.v01.raw_count.20210429.PFI.embedding.cellxgene.h5ad) | [download .h5ad file](PAN.A01.v01.raw_count.20210429.PFI.embedding.h5ad) | [download scVI model](scRNA_data/scVI_models/scvi_PFI_model) | [download .csv file of cell annotations](scRNA_data/PAN.A01.v01.entire_data_normalised_log.20210429.full_obs.annotated.clean.csv) | [download CellTypist model](scRNA_data/celltypist_model.Pan_Fetal_Human.pkl)
 
+See [our tutorial](https://nbviewer.org/github/Teichlab/Pan_fetal_immune/blob/master/tutorials/tutorial_celltypist_fetal_immune.ipynb) for example use of CellTypist model for automatic cell annotation of query data based on fetal atlas. 
+
 ### Cell type lineages
 
 - HSC/immune cells (all hematopoietic-derived cells) | [Interactive viewer](scRNA_data/PAN.A01.v01.raw_count.20210429.HSC_IMMUNE.embedding.cellxgene.h5ad) | [download .h5ad file](scRNA_data/PAN.A01.v01.raw_count.20210429.HSC_IMMUNE.embedding.h5ad) | [download scVI model](scRNA_data/scVI_models/scvi_HSC_IMMUNE_model)
@@ -16,7 +18,7 @@ Full dataset of single-cell RNA-seq profiles from 9 developmental tissues across
 - Lymphoid cells | [Interactive viewer](scRNA_data/PAN.A01.v01.raw_count.20210429.LYMPHOID.embedding.cellxgene.h5ad) | [download .h5ad file](scRNA_data/PAN.A01.v01.raw_count.20210429.LYMPHOID.embedding.h5ad) | [download scVI model](scRNA_data/scVI_models/scvi_LYMPHOID_model)
 - NK/T cells | [Interactive viewer](scRNA_data/PAN.A01.v01.raw_count.20210429.NKT.embedding.cellxgene.h5ad) | [download .h5ad file](scRNA_data/PAN.A01.v01.raw_count.20210429.NKT.embedding.h5ad) | [download scVI model](scRNA_data/scVI_models/scvi_NKT_model)
 
-See our [code repository](https://github.com/Teichlab/Pan_fetal_immune/tree/master/src/utils/scArches_utils) for example use of scVI models for reference-based mapping of new single-cell RNA-seq experiments. 
+See [our tutorial](https://nbviewer.org/github/Teichlab/Pan_fetal_immune/blob/master/tutorials/tutorial_query2reference_mapping.ipynb) for example use of scVI models for mapping query data to fetal immune atlas. 
 
 ### _In vitro_ T cell development
 

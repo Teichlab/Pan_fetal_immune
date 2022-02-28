@@ -48,8 +48,8 @@ def load_data_split(data_dir, timestamp, split):
     ## Load var
     adata_raw.var = adata_lognorm_var.copy()
 
-    ## Add batch key
-    adata_raw.obs["bbk"] = adata_raw.obs["method"] + adata_raw.obs["donor"]
+    # ## Add batch key
+    # adata_raw.obs["bbk"] = adata_raw.obs["method"] + adata_raw.obs["donor"]
     return(adata_raw)
 
 def subset_top_hvgs(adata_lognorm, n_top_genes):
@@ -80,15 +80,23 @@ def prep_scVI(adata,
         
     ## HVG selection
     adata = subset_top_hvgs(adata, n_top_genes=n_hvgs)
+    
+    ## Change gene names to ids
+    adata.var_names = adata.var['GeneID'].values.copy()
     return(adata)
 
 def train_scVI(adata, n_dims=20):
-    adata = scvi.data.setup_anndata(adata, batch_key = "bbk", copy=True)
+    adata = scvi.model.SCVI.setup_anndata(adata, 
+                                    categorical_covariate_keys = ["method", 'donor'], 
+                                    copy=True)
+    ## updated in new scArches version
     arches_params = dict(
+        use_layer_norm="both",
+        use_batch_norm="none",
         encode_covariates=True,
         dropout_rate=0.2,
         n_layers=2,
-        )
+    )
     vae = scvi.model.SCVI(adata, n_latent=n_dims, **arches_params)
     vae.train(early_stopping=True,
         train_size=0.9,
@@ -109,7 +117,7 @@ def scvi_split(s,
     vae = train_scVI(adata_raw, n_dims=20)
     adata_raw.obsm["X_scVI"] = vae.get_latent_representation()
     ## Save embedding
-    outname = "PAN.A01.v01.entire_data_raw_count.{t}.{s}.scVI_out.npy".format(t=timestamp, s=s)
+    outname = "PAN.A01.v01.entire_data_raw_count.{t}.{s}.scVI_out.V2.npy".format(t=timestamp, s=s)
     np.save(data_dir + outname, adata_raw.obsm["X_scVI"])
     ## Plot convergence
     sns.set_context("talk")

@@ -18,6 +18,10 @@ if not os.path.exists(output_dir):
 ## Load full annotation table
 anno_obs = pd.read_csv(data_dir + "PAN.A01.v01.entire_data_normalised_log.{t}.full_obs.annotated.clean.csv".format(t=timestamp), index_col=0)
 
+## Read barcodes of maternal cells
+mat_barcodes = pd.read_csv("../../metadata/souporcell_results/maternal_barcodes.csv", index_col=0)
+mat_barcodes = pd.Series([x.split("-1")[0] for x in mat_barcodes['x']])
+
 ## Load annotation groupings
 with open('../../metadata/anno_groups.json', 'r') as json_file:
     anno_groups_dict = json.load(json_file)
@@ -31,8 +35,6 @@ for split in all_splits:
     adata.var_names_make_unique()
 
     ## Mark maternal contaminants
-    mat_barcodes = pd.read_csv("../../metadata/souporcell_results/maternal_barcodes.csv", index_col=0)
-    mat_barcodes = pd.Series([x.split("-1")[0] for x in mat_barcodes['x']])
     adata.obs['is_maternal_contaminant'] = adata.obs_names.isin(mat_barcodes)
 
     ## Add fine cell type annotations
@@ -59,16 +61,23 @@ for split in all_splits:
                      'celltype_annotation']
 
     adata.obs = adata.obs[keep_obs_cols].copy()
+    adata.obs["donor"] = adata.obs["donor"].astype(str) ## Fix mixed type issue
 
     ## Clean uns
     adata.uns = {k:v for k,v in adata.uns.items() if not k.endswith("_colors")}
-    
+
     ## Store the raw count matrix
     adata_raw = sc.read_h5ad(data_dir + 'PAN.A01.v01.entire_data_raw_count.{t}.{s}.h5ad'.format(t=timestamp, s=split))
     adata.X = adata_raw.X.copy()
 
+    ## Save info on vars used in scVI embedding 
+    adata_var = pd.read_csv(data_dir + 'PAN.A01.v01.entire_data_normalised_log.{t}.{s}.var.csv'.format(t=timestamp, s=split), index_col=0)
+    scvi_model_vars = pd.read_csv(output_dir + f'/scVI_models/scvi_{split}_model/var_names.csv', header=None)[0]
+    adata_var['scvi_model_var'] = adata_var['GeneID'].isin(scvi_model_vars)
+    adata.var = adata_var.copy()
+    
     ## Save for data download
-    adata.write_h5ad(output_dir + 'PAN.A01.v01.raw_count.{t}.{s}.embedding.h5ad'.format(t=timestamp, s=split))
+    adata.write_h5ad(output_dir + 'PAN.A01.v01.raw_count.{t}.{s}.embedding.h5ad'.format(t=timestamp, s=split), compression='gzip')
     
 ## Save objects 4 cellxgene
 for split in all_splits:

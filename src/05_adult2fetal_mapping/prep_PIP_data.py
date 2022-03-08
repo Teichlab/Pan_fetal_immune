@@ -7,19 +7,16 @@ import pandas as pd
 import scanpy as sc
 
 pi_adata = sc.read_h5ad('/nfs/team205/cx1/Celltypist/revision_science/data/PIP_global_object_raw_count.h5ad')
+pi_adata.var_names_make_unique()
 
-## Convert gene names to EnsemblIDs as `var_names` (using old object)
-
-pip_adata_old = sc.read_h5ad('/nfs/team205/ed6/data/Fetal_immune/panimmune_query.h5ad')
-var_new = pi_adata.var.reset_index()
-var_old = pip_adata_old.var.copy()
-var_new.columns = ['gene_names', 'highly_variable']
-var_new = pd.merge(var_new, var_old, how='left')
-pi_adata.var = var_new.copy()
-
-pi_adata.var_names = pi_adata.var['gene_ids'].values.copy()
-## Filter out genes with missing ID
-pi_adata = pi_adata[:,~pi_adata.var_names.isna()].copy()
+## Convert gene names to EnsemblIDs as `var_names` (matching with fetal obj)
+adata_fetal = sc.read_h5ad('/nfs/team205/ed6/data/Fetal_immune/PAN.A01.v01.entire_data_normalised_log.20210429.h5ad', backed='r')
+adata_fetal.var_names_make_unique()
+common_genes = pi_adata.var_names[pi_adata.var_names.isin(adata_fetal.var_names)]
+print(f'found {len(common_genes)}/{pi_adata.n_vars} common genes')
+pi_adata = pi_adata[:,common_genes].copy()
+pi_adata.var = adata_fetal.var.loc[common_genes]
+pi_adata.var_names = pi_adata.var['GeneID'].values.copy()
 
 ## Match column name for 10x method and donor
 tr_obs = {'donor_id':'donor', 'chem':"method"}

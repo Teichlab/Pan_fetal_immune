@@ -15,6 +15,9 @@ from genes import IG_genes
 ### Functions used for preprocessing ###
 
 def remove_geneset(adata,geneset):
+    ## Check that var_names are not ensemblIDs
+    # if adata.var_names.str.startswith('ENS')[0]:
+    #     raise ValueError('adata.var_names are ensemblIDs')
     adata = adata[:,~adata.var_names.isin(list(geneset))].copy()
     return adata
 

@@ -22,7 +22,7 @@ parser.add_argument("--annot_dir",
                     help="folder containing unified annotations")
 parser.add_argument("--metadata_path", 
                     default="/home/jovyan/mount/gdrive/Pan_fetal/annotations/manifest_clean_120121.csv",
-                    help="folder containing unified annotations")
+                    help="folder containing unified metadata")
 args = parser.parse_args()
 
 data_dir = args.indir

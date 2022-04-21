@@ -26,7 +26,9 @@ mat_barcodes = pd.Series([x.split("-1")[0] for x in mat_barcodes['x']])
 with open('../../metadata/anno_groups.json', 'r') as json_file:
     anno_groups_dict = json.load(json_file)
 
-all_splits = ['STROMA', 'HSC_IMMUNE', "MEM_PROGENITORS", "HSC_PROGENITORS","LYMPHOID", "MYELOID_V2","NKT"]
+all_splits = [
+#     'STROMA', 
+              'HSC_IMMUNE', "MEM_PROGENITORS", "HSC_PROGENITORS","LYMPHOID", "MYELOID_V2","NKT"]
 
 for split in all_splits:
     print("Processing {s}...".format(s=split))

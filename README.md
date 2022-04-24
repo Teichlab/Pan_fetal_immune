@@ -8,7 +8,7 @@ Data processing and analysis scripts for fetal immune atlas (see our [preprint](
 
 ## Data information
 
-Processed datasets in `h5ad` format and trained scVI models are available at [https://developmentcellatlas.cellgeni.sanger.ac.uk/fetal-immune](https://developmentcellatlas.cellgeni.sanger.ac.uk/fetal-immune).
+Processed datasets in `h5ad` format and trained scVI models are available at [https://developmental.cellatlas.io/fetal-immune](https://developmental.cellatlas.io/fetal-immune).
 
 ## Model re-use tutorials
 

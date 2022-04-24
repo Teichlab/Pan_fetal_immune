@@ -12,6 +12,8 @@ parser.add_argument("--subset_organ", type=str,
                     default=None)
 parser.add_argument("--min_age", type=int,
                     default=None)
+parser.add_argument("--max_age", type=int,
+                    default=None)
 parser.add_argument("--split_stroma", type=bool,
                     default=False)
 parser.add_argument("--add_TECs", type=bool,
@@ -21,7 +23,8 @@ parser.add_argument("--keep_fetal_TECs", type=bool,
 args = parser.parse_args()
 
 org = args.subset_organ
-age = args.min_age
+min_age = args.min_age
+max_age = args.max_age
 split_stroma = args.split_stroma
 add_tecs = args.add_TECs
 keep_fetal_TECs = args.keep_fetal_TECs
@@ -33,6 +36,7 @@ def make_c2l_reference(
     library_obs = ['Sample.lanes'], ## Covariate for 10x library
     subset_organ=None,
     min_age = None,
+    max_age = None,
     exclude_clusters = None, ## Clusters to exclude
     split_by_organ = None, ## for which clusters should the annotation be split by organ? e.g. just stroma
     min_cells = 20 ## Minimum number of cells to keep a cluster
@@ -44,6 +48,8 @@ def make_c2l_reference(
     ## Subset by age
     if min_age:
         ref_adata = ref_adata[ref_adata.obs["age"] >= min_age].copy()
+    if max_age:
+        ref_adata = ref_adata[ref_adata.obs["age"] <= max_age].copy()
 
     ## Exclude low quality clusters
     if exclude_clusters:
@@ -59,6 +65,10 @@ def make_c2l_reference(
     clus_counts = ref_adata.obs[annotation_obs].value_counts() 
     keep_clus = clus_counts.index[clus_counts >= min_cells] 
     ref_adata = ref_adata[ref_adata.obs[annotation_obs].isin(keep_clus)].copy()
+    
+    ## Remove empty genes
+    keep_genes = np.array(ref_adata.X.sum(0) > 0).ravel()
+    ref_adata = ref_adata[:,keep_genes].copy()
 
     ## Clean obs
     ref_adata.obs = ref_adata.obs[technical_obs + library_obs + [annotation_obs, "organ", "age"]].copy()
@@ -73,6 +83,8 @@ def save_c2l_reference(params):
         outfile = outfile + "organ_split_stroma."
     if params["min_age"]:
         outfile = outfile + "minAge{a}.".format(a=params["min_age"])
+    if params["max_age"]:
+        outfile = outfile + "maxAge{a}.".format(a=params["max_age"])
     if params["exclude_clusters"]:
         outfile = outfile + "exclude_lowQ."
     if params["add_TECs"]:
@@ -99,7 +111,7 @@ adata = sc.read_h5ad(data_dir + 'PAN.A01.v01.entire_data_raw_count.{t}.h5ad'.for
 adata.var_names_make_unique()
 
 ## Filter maternal contaminants
-mat_barcodes = pd.read_csv("~/Pan_fetal_immune/metadata/souporcell_results/maternal_barcodes.csv", index_col=0)
+mat_barcodes = pd.read_csv("../../metadata/souporcell_results/maternal_barcodes.csv", index_col=0)
 mat_barcodes["x"] = pd.Series([x.split("-1")[0] for x in mat_barcodes['x']])
 adata = adata[~adata.obs_names.isin(mat_barcodes["x"])]
 
@@ -131,11 +143,6 @@ rename_label = anno_c2l_th.anno_organ[anno_c2l_th['anno_lvl_2_final_clean'] == "
 
 adata.obs.loc[rename_cells,"anno_c2l"] = rename_label
 
-<<<<<<< HEAD
-
-=======
-print(adata)
->>>>>>> 5dd7212f4c6a51469cb9d33fe0e31757e59be6b8
 ## Add additional TECs
 if add_tecs:
     th_atlas = '/lustre/scratch117/cellgen/team205/cs42/jovyan_25082021/thymusatlas/HTA07.A01.v02.entire_data_raw_count.h5ad'
@@ -155,6 +162,7 @@ if add_tecs:
 
     adata = adata.concatenate(tec_adata, join='outer')
     adata.obs.loc[tec_adata.obs_names + "-1" , 'anno_c2l'] = th_adata_anno[tec_adata.obs_names].obs["Anno_level_fig1"].values
+    adata.obs.loc[tec_adata.obs_names + "-1" , 'age'] = th_adata_anno[tec_adata.obs_names].obs["Age"].str.rstrip('w').astype("int").values
     adata.obs["anno_c2l"] = adata.obs["anno_c2l"].copy()
     print(adata)
 
@@ -162,6 +170,12 @@ if add_tecs:
     remove_kera = adata.obs['anno_c2l']=='KERATINOCYTE'
     print("N of keratynocytes left: {n}".format(n=sum(remove_kera)))
     adata = adata[~remove_kera]    
+    
+    ## Remove unmatched genes
+    keep_vars = adata.var_names[adata.var['GeneID-0'].astype('str') == adata.var['GeneID-1'].astype('str')]
+    adata = adata[:,keep_vars].copy()
+    adata.var = adata.var[['GeneID-0', 'GeneName-0']].copy()
+    adata.var.columns = ['GeneID', 'GeneName']
 
 ## Save
 
@@ -179,7 +193,8 @@ if split_stroma:
 params = {
                 'subset_organ':org,
                 'split_by_organ' : split_stroma,
-                'min_age':age,
+                'min_age':min_age,
+                'max_age':max_age,
                 'exclude_clusters':lowQ_clusters,
                 'add_TECs':add_tecs,
                 'keep_fetal_TECs':keep_fetal_TECs

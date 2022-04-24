@@ -1,4 +1,7 @@
 # Mapping the developing human immune system across organs
+
+[![DOI](https://zenodo.org/badge/325343185.svg)](https://zenodo.org/badge/latestdoi/325343185)
+
 Data processing and analysis scripts for fetal immune atlas (see our [preprint](https://www.biorxiv.org/content/10.1101/2022.01.17.476665v1))
 
 ## Contents

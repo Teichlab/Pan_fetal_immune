@@ -135,3 +135,8 @@ dmypy.json
 metadata/DATA_INFO.md
 thrash_n_snippets/
 src/04_milo_analysis/csv/
+**/data/
+**/figures/
+**/csv/
+**/enrichr/
+

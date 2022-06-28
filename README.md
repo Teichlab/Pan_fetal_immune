@@ -9,9 +9,21 @@ Data processing and analysis scripts for fetal immune atlas (see our [preprint](
 * [`src`](https://github.com/emdann/Pan_fetal_immune/edit/master/src) contains scripts and notebooks used for data processing and analysis.
 * [`metadata`](https://github.com/emdann/Pan_fetal_immune/edit/master/metadata): contains metadata relevant for sample and cell annotations, pointers to raw and processed data, color palettes and groupings.
 
-## Data information
+## Data and metadata information
 
-Processed datasets in `h5ad` format and trained scVI models are available at [https://developmental.cellatlas.io/fetal-immune](https://developmental.cellatlas.io/fetal-immune).
+Browse all processed datasets, models and annotations at [https://developmental.cellatlas.io/fetal-immune](https://developmental.cellatlas.io/fetal-immune).
+
+### Processed gene expression data 
+
+### Processed spatial transcriptomics data
+
+### Processed scVDJ-seq data
+
+
+### Raw sequencing data 
+Raw sequencing libraries are deposited in ArrayExpress (scRNA-seq libraries: [E-MTAB-11343](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-11343/) | Visium libraries: [E-MTAB-11341](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-11341/) | scVDJ libraries: [E-MTAB-11388](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-11388/)). 
+
+  
 
 ## Model re-use tutorials
 

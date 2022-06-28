@@ -47,6 +47,8 @@ Raw sequencing libraries are deposited in [ArrayExpress](https://www.ebi.ac.uk/b
 
 ## Model re-use tutorials
 
+Trained models for integrated embedding with [scVI](https://scvi-tools.org/) and cell type annotation with [CellTypist](https://www.celltypist.org/) can be downloaded through our [data portal](https://developmental.cellatlas.io/fetal-immune). We provide the following tutorials to explain how to use these models for contextualization and fast analysis of new data:  
+
 - [Mapping query data to fetal immune reference with scArches](https://nbviewer.org/github/Teichlab/Pan_fetal_immune/blob/master/tutorials/tutorial_query2reference_mapping.ipynb) 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Teichlab/Pan_fetal_immune/blob/master/tutorials/tutorial_query2reference_mapping.ipynb)
 - [Automatic cell type annotation from fetal immune reference with CellTypist](https://nbviewer.org/github/Teichlab/Pan_fetal_immune/blob/master/tutorials/tutorial_celltypist_fetal_immune.ipynb)[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Teichlab/Pan_fetal_immune/blob/master/tutorials/tutorial_celltypist_fetal_immune.ipynb)

@@ -139,4 +139,5 @@ src/04_milo_analysis/csv/
 **/figures/
 **/csv/
 **/enrichr/
+**/.DS_Store
 

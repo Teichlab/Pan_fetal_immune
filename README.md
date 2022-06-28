@@ -14,18 +14,25 @@ Data processing and analysis scripts for fetal immune atlas (see our [paper](htt
 
 Browse all processed datasets, models and annotations at [https://developmental.cellatlas.io/fetal-immune](https://developmental.cellatlas.io/fetal-immune).
 
-### Processed gene expression data 
+### Primary tissue gene expression data  
+For primary tissue samples, **gene expression count matrices** from scRNA-seq (10X Genomics 3' and 5') are available as [AnnData](https://anndata-tutorials.readthedocs.io/en/latest/getting-started.html) objects in `.h5ad` format for the [full dataset](https://developmental.cellatlas.io/fetal-immune#DatasetModalscRNA-seq1) (including stromal, immune and low quality cells), and 7 lineage subsets. In all objects `adata.X` stores gene counts corrected for background expression using [CellBender](https://github.com/broadinstitute/CellBender).
 
-### Processed spatial transcriptomics data
+**Cell-level metadata**, including cell type annotations, are stored in `adata.obs` and can be downloaded separately [here](https://cellgeni.cog.sanger.ac.uk/developmentcellatlas/fetal-immune/PAN.A01.v01.entire_data_normalised_log.20210429.full_obs.annotated.clean.csv) (note: here cell type annotations are stored in column `anno_lvl_2_final_clean`). **Sample-level metadata**, including matching between scRNA-seq and scVDJ-seq libraries can be downloaded [here](). 
 
-### Processed scVDJ-seq data
+### _In vitro_ derived T cells gene expression data  
+For in vitro derived T cells from Artificial Thymic Organoid protocols the **gene expression count matrix** from scRNA-seq (10X genomics 3') is available in `.h5ad` format [here](https://developmental.cellatlas.io/fetal-immune#DatasetModalscRNA-seq9). **Sample-level metadata** can be found [here](https://github.com/Teichlab/Pan_fetal_immune/blob/master/metadata/ATO_metadata_26102021.csv).
+
+### Spatial transcriptomics data
+Gene expression count matrices in `.h5ad` format and high-resolution images in `.tiff` format can be downloaded from the data portal (see section [Spatial Transcriptomics](https://developmental.cellatlas.io/fetal-immune)).  
+
+#### Processed scVDJ-seq data
 
 
-### Raw sequencing data 
+#### Raw sequencing data 
 Raw sequencing libraries are deposited in ArrayExpress 
 - scRNA-seq libraries: raw data for libraries generated for this study are deposited under accession [E-MTAB-11343](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-11343/). Raw data for libraries published in previous studies can be found under accessions 
 - []()      
-- Visium libraries: [E-MTAB-11341](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-11341/) 
+- Visium libraries (incl. hi-res images): [E-MTAB-11341](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-11341/) 
 - scVDJ libraries: [E-MTAB-11388](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-11388/)). 
 
   

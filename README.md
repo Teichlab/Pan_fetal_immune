@@ -37,7 +37,7 @@ Raw sequencing libraries are deposited in [ArrayExpress](https://www.ebi.ac.uk/b
     - [ArrayExpress E-MTAB-7407](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-7407/) ([Popescu et al. 2019](https://www.nature.com/articles/s41586-019-1652-y))
     - [HCA data coordination platform](https://data.humancellatlas.org/explore/projects/abe1a013-af7a-45ed-8c26-f3793c24a1f4) ([Stewart et al. 2019](https://www.science.org/doi/10.1126/science.aat5031))
     - [ArrayExpress E-MTAB-9389](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-9389/) ([Jardine, Webb et al. 2021](https://www.nature.com/articles/s41586-021-03929-x))
-    - [ArrayExpress E-MTAB-8901](https://www.ebi.ac.uk/arrayexpress/ experiments/E-MTAB-8901/) ([Elmentaite et al. 2020](https://doi.org/10.1016/j.devcel.2020.11.010))
+    - [ArrayExpress E-MTAB-8901](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-8901/) ([Elmentaite et al. 2020](https://doi.org/10.1016/j.devcel.2020.11.010))
     - [ArrayExpress E-MTAB-8142](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-8142) ([Reynolds et al. 2021](doi:10.1126/science.aba6500))
     - [ArrayExpress E-MTAB-8581](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-8581) ([Park et al. 2020](http://dx.doi.org/10.1126/science.aay3224))
 - Visium libraries: [E-MTAB-11341](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-11341/) 

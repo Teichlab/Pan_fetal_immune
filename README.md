@@ -43,6 +43,9 @@ Raw sequencing libraries are deposited in [ArrayExpress](https://www.ebi.ac.uk/b
 - Visium libraries: [E-MTAB-11341](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-11341/) 
 - scVDJ libraries (all libraries): [E-MTAB-11388](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-11388/)). 
 
+### smFISH data
+The imaging data for detection of immune cell progenitors in fetal tissues can be found on the BioImage Archive ([S-BIAD515](https://www.ebi.ac.uk/biostudies/studies/S-BIAD515))
+
   
 
 ## Model re-use tutorials
